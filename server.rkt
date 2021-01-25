@@ -1,35 +1,57 @@
 #lang web-server
 
+;TODO: Abstract away requests.
+;  Just let peope make logic based on passing functions out to front end UI to call with user-produced data
+
 (require web-server/servlet-env)
 (require json)
 
-; start: request -> response
-(define (start request)
-  (show-counter 1 request))
+(require web-server/lang/web-param)
 
-; show-counter: number request -> doesn't return
-; Displays a number that's hyperlinked: when the link is pressed,
-; returns a new page with the incremented number.
-(define (show-counter n request)
-  (define (response-generator embed/url)
+(define current-request-args
+  (make-web-parameter (void)))
+
+(define-syntax-rule (with-current-request-args request lines ...)
+  (web-parameterize
+    ([current-request-args (parse-args request)])
+    lines ...))
+
+(define (json-continuation next current)
+  ;Next is a function with no params, but which may use (current-request-args) within it
+  (lambda (embed/url)
     (response/json/cors
       (hash
-	'next (embed/url next-number-handler)
-	'value n)))
+	'next (embed/url (lambda (request) 
+			   (with-current-request-args request
+			     (next))))
+	'value current))))
 
-  (define (next-number-handler request)
-    ;Hacky way of getting parameter from
-    ; url.  Can use this trick to send along
-    ; json from the React runtime state of the component.
-    (define arg
-      (last
-	(string-split (url->string (request-uri request)) "/")))
+(define (parse-args request)
+  ;Hacky way of getting parameter from
+  ; url.  Can use this trick to send along
+  ; json from the React runtime state of the component.
+  (define s
+    (string-split (url->string (request-uri request)) "/"))
+  (define arg
+    (if (empty? s)
+	(void)
+	(last s)))
 
-    (define mult (or (string->number arg) 1))
+  ;Assume number for now, generalized to json strings later
+  (define n (or (string->number (~a arg)) 1))
 
-    (show-counter (+ n mult) request))
+  n)
 
-  (send/suspend/dispatch response-generator))
+(define (start request)
+  (with-current-request-args request
+    (show-counter 1)))
+
+(define (show-counter n)
+  (define (next-number-handler) ; I guess this is the shape of json-continuable functions: No params; uses current-request-args
+    (define mult (current-request-args))
+    (show-counter (+ n mult)))
+
+  (send/suspend/dispatch (json-continuation next-number-handler n)))
 
 (define (response/json json)
   (response/full
