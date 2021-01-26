@@ -1,6 +1,7 @@
 #lang at-exp racket
 
 (provide
+  define-component
   component
   compile-app
   save-app
@@ -11,11 +12,29 @@
   class: 
   (all-from-out website))
 
-(require website)
+(require website
+	 syntax/parse/define)
+
+(require (for-syntax racket/syntax))
 
 (define class: 'className:)
 
 (struct component (name body))
+
+(define-syntax (define-component stx)
+  (syntax-parse 
+    stx
+    [(_ name content)
+     #:with name-component (format-id stx "~a-component" #'name)
+     #'(begin
+	 (define name-component
+	   (component 'name content))
+	
+	 (define (name . attrs)
+	   (apply element/not-empty 'name attrs))
+	 
+	)
+     ]))
 
 (define js ~a)
 

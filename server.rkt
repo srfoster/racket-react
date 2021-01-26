@@ -2,10 +2,25 @@
 
 ;TODO: Abstract away requests.
 ;  Just let peope make logic based on passing functions out to front end UI to call with user-produced data
+;
+; Figure out how client and server code interact.  How does a component get bound to a continued function?
+
+; * Make client-side helper for doing fetches. And for constructing hashes.
+;   -> call-server-function needs some help. 
+;   -> So does @~{...} injecting extra curlies 
+; * Be able to mix and match client and server side code?? Example??
+
+
+
+; * Parameterize localhost...
+; * Make a way to easily include react stuff in websites via (render...)
+; * Make macros for useState and define local values for get and set.
+; * Allow quotes and greater thans etc. in attrs.  Need to hack around scribble/html's limitation there.
+; * Make a better way of aggregating all the components together.  Not (list A-component B-component).  Maybe detect during rendering when component (div (A (B))) gets rendered and have A and B be functions that add the appropriate component to some global list somewhere (if not already there), and then they compile into <A><B/></A> etc.
 
 (require web-server/servlet-env)
 (require json)
-
+(require net/uri-codec)
 (require web-server/lang/web-param)
 
 (define current-request-args
@@ -32,15 +47,18 @@
   ; json from the React runtime state of the component.
   (define s
     (string-split (url->string (request-uri request)) "/"))
+
   (define arg
     (if (empty? s)
 	(void)
 	(last s)))
 
-  ;Assume number for now, generalized to json strings later
-  (define n (or (string->number (~a arg)) 1))
+  (define j (string->jsexpr (uri-decode arg)))
 
-  n)
+  j)
+
+(define (arg key)
+  (hash-ref (current-request-args) key))
 
 (define (start request)
   (with-current-request-args request
@@ -48,8 +66,7 @@
 
 (define (show-counter n)
   (define (next-number-handler) ; I guess this is the shape of json-continuable functions: No params; uses current-request-args
-    (define mult (current-request-args))
-    (show-counter (+ n mult)))
+    (show-counter (+ n (arg 'mult))))
 
   (send/suspend/dispatch (json-continuation next-number-handler n)))
 
