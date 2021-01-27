@@ -12,6 +12,11 @@
 ;   -> Patterns for starting off a continuation and passing around references to the continuation path?
 ;   -> Should all continuations store result as {value: ...}?  See message below.
 
+; * Clean up the duplicated server calls in my-app/main.rkt, see TestCall and Hi
+
+; * Make parse args not fail if there's no ?data=
+
+; * Pick a project: Choose your own adventure game?  Text adventure?
 
 
 ; * Parameterize localhost...
@@ -63,13 +68,21 @@
   (dispatch-rules
     [("message")
      (lambda (r) 
+       (send/suspend/dispatch
+	 (json-continuation 
+	   (thunk 
+	     (response/json/cors 
+	       (hash 'next #f
+		     'value "End of the story")))
+	   "Hello World"))
+
+       #;
        (response/json/cors
 	 (hash
 	   'message "Hello world"
 	   )))]
-    [("counter")
-     (lambda (r) (show-counter 1))
-     ]))
+    [("counter") ;Gets a new counter continuation.  
+     (lambda (r) (show-counter 1))]))
 
 (define (start request)
   (with-current-request-args 
