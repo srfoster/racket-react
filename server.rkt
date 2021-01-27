@@ -6,9 +6,11 @@
 ; Figure out how client and server code interact.  How does a component get bound to a continued function?
 
 ; * Make client-side helper for doing fetches. And for constructing hashes.
-;   -> call-server-function needs some help. 
-;   -> So does @~{...} injecting extra curlies 
-; * Be able to mix and match client and server side code?? Example??
+;   -> @~{...} injecting extra curlies.  When to use vs @js?
+; * How to connect component to a server function?
+;   -> window.server_call...
+;   -> Patterns for starting off a continuation and passing around references to the continuation path?
+;   -> Should all continuations store result as {value: ...}?  See message below.
 
 
 
@@ -46,23 +48,33 @@
   ; url.  Can use this trick to send along
   ; json from the React runtime state of the component.
   (define s
-    (string-split (url->string (request-uri request)) "/"))
+    (extract-binding/single
+      'data
+      (request-bindings request)))
 
-  (define arg
-    (if (empty? s)
-	(void)
-	(last s)))
-
-  (define j (string->jsexpr (uri-decode arg)))
+  (define j (string->jsexpr (uri-decode s)))
 
   j)
 
 (define (arg key)
   (hash-ref (current-request-args) key))
 
+(define-values (do-routing url)
+  (dispatch-rules
+    [("message")
+     (lambda (r) 
+       (response/json/cors
+	 (hash
+	   'message "Hello world"
+	   )))]
+    [("counter")
+     (lambda (r) (show-counter 1))
+     ]))
+
 (define (start request)
-  (with-current-request-args request
-    (show-counter 1)))
+  (with-current-request-args 
+    request
+    (do-routing request)))
 
 (define (show-counter n)
   (define (next-number-handler) ; I guess this is the shape of json-continuable functions: No params; uses current-request-args

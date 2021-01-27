@@ -52,7 +52,14 @@
   @js{
   import logo from './logo.svg';
   import './App.css';
-  import React, { useState } from 'react';
+  import React, { useState, useEffect } from 'react';
+
+  window.server_call = (host,server_function,data,cb) =>{
+  fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
+  .then((r)=>{
+	cb(r)
+	})
+  }
 
   @(string-join
      (map compile-component components)
