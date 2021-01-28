@@ -1,5 +1,19 @@
 #lang web-server
 
+(provide start
+	 json-continuation
+	 response/json/cors
+	 (all-from-out web-server/servlet-env)
+	 dispatch-rules
+	 send/suspend/dispatch/json-continuation
+	 arg
+	 )
+
+(require web-server/servlet-env)
+(require json)
+(require net/uri-codec)
+(require web-server/lang/web-param)
+
 ;TODO: Abstract away requests.
 ;  Just let peope make logic based on passing functions out to front end UI to call with user-produced data
 ;
@@ -25,10 +39,6 @@
 ; * Allow quotes and greater thans etc. in attrs.  Need to hack around scribble/html's limitation there.
 ; * Make a better way of aggregating all the components together.  Not (list A-component B-component).  Maybe detect during rendering when component (div (A (B))) gets rendered and have A and B be functions that add the appropriate component to some global list somewhere (if not already there), and then they compile into <A><B/></A> etc.
 
-(require web-server/servlet-env)
-(require json)
-(require net/uri-codec)
-(require web-server/lang/web-param)
 
 (define current-request-args
   (make-web-parameter (void)))
@@ -48,6 +58,10 @@
 			     (next))))
 	'value current))))
 
+(define (send/suspend/dispatch/json-continuation next current)
+  (send/suspend/dispatch
+    (json-continuation next current)))
+
 (define (parse-args request)
   ;Hacky way of getting parameter from
   ; url.  Can use this trick to send along
@@ -64,36 +78,13 @@
 (define (arg key)
   (hash-ref (current-request-args) key))
 
-(define-values (do-routing url)
-  (dispatch-rules
-    [("message")
-     (lambda (r) 
-       (send/suspend/dispatch
-	 (json-continuation 
-	   (thunk 
-	     (response/json/cors 
-	       (hash 'next #f
-		     'value "End of the story")))
-	   "Hello World"))
 
-       #;
-       (response/json/cors
-	 (hash
-	   'message "Hello world"
-	   )))]
-    [("counter") ;Gets a new counter continuation.  
-     (lambda (r) (show-counter 1))]))
+(define (start do-routing)
+  (lambda (request)
+    (with-current-request-args 
+      request
+      (do-routing request))))
 
-(define (start request)
-  (with-current-request-args 
-    request
-    (do-routing request)))
-
-(define (show-counter n)
-  (define (next-number-handler) ; I guess this is the shape of json-continuable functions: No params; uses current-request-args
-    (show-counter (+ n (arg 'mult))))
-
-  (send/suspend/dispatch (json-continuation next-number-handler n)))
 
 (define (response/json json)
   (response/full
@@ -120,12 +111,3 @@
 		       #"*"))
 		   (response-headers r))]))
 
-(define (start-server)
-  (serve/servlet start
-		 #:port 8081
-		 #:servlet-regexp #rx""
-		 #:launch-browser? #f
-		 #:stateless? #t
-		 ))
-
-(start-server)
