@@ -2,21 +2,37 @@
 
 (provide start-server)
 
-(require "../server.rkt")
+(require "../server.rkt"
+	 racket/stxparam
+	 )
 
 ;Hmmm.  Top-alt might be preferable.
 ;  Maybe we just return json objects but with continuations serialized into them.
 ;  The client can decide what to call based on its own logic, and/or the meta-data associated with the continuations...
 ;  Just clean up the send/suspend/dispatch + lambda + embed/url + lambda + with-current-request-args...
 
+; Factor out this fancy macro
+
+(define-syntax-parameter embed (syntax-rules ())) 
+
+(define-syntax with-embeds
+  (syntax-rules ()
+    [(s/s/d/j lines ...)
+     (send/suspend/dispatch
+       (lambda (embed/url)
+	 (syntax-parameterize
+	   ([embed (syntax-rules () 
+		     [(_ f) 
+		      (embed/url (lambda (r) (with-current-request-args r (f))))])])
+	   lines ...)))]))
+
 (define top-alt
   (thunk 
-    (send/suspend/dispatch
-      (lambda (embed/url)
-	(response/json/cors 
-	  (hash 'next (embed/url (lambda (r) 
-				   (with-current-request-args r (top))))
-		'value "Welcome"))))))
+    (with-embeds
+      (response/json/cors 
+	(hash 'next (embed top)
+	      'other (embed top2)
+	      'value "Welcome")))))
 
 (define top3
   (thunk 

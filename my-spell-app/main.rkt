@@ -7,9 +7,12 @@
 ;Try to get rid of boilerplate compilation stuff at bottom
 ;Declare props like path: so we don't have to 'path:
 
+;Redo continuation viewer now that json payloads can have multiple continuations
+
 (define-component ContinuationViewer
 		  @js{var [next, setNext] = useState()} ;Can we macroify??
 		  @js{var [value, setValue] = useState()} ;Can we macroify??
+		  @js{var [other, setOther] = useState()} ;Can we macroify??
 		  (useEffect
 		    @js{
 		    if(next == undefined){
@@ -19,6 +22,7 @@
 				       {},
 				       (r)=>{
 				       setNext(r.next)
+				       setOther(r.other)
 				       setValue(r.value)
 				       }) 
 		    }
@@ -34,10 +38,25 @@
 					   {},
 					   (r)=>{
 					   setNext(r.next)
+					   setOther(r.other)
 					   setValue(r.value)
 					   }) 
 			}}
-			"Next: "  @~{next}))))
+			"Next: "  @~{next})
+		      (div 
+			onClick: @~{()=>{
+			if(next)
+			window.server_call('http://localhost:8081',
+					   other,
+					   {},
+					   (r)=>{
+					   setNext(r.next)
+					   setOther(r.other)
+					   setValue(r.value)
+					   }) 
+			}}
+			"Other: "  @~{other})
+		      )))
 
 (define-component App
 		  (return

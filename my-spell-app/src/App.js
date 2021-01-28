@@ -14,6 +14,8 @@ function ContinuationViewer (props){
 
 var [value, setValue] = useState()
 
+var [other, setOther] = useState()
+
 useEffect(()=>{
  if(next == undefined){
 console.log("...")
@@ -22,6 +24,7 @@ window.server_call("http://localhost:8081",
                    {},
                    (r)=>{
                    setNext(r.next)
+                   setOther(r.other)
                    setValue(r.value)
                    })
 }
@@ -34,9 +37,20 @@ return <div><div>Value: {value}</div><div onClick={()=>{
                      {}, 
                      (r)=>{ 
                      setNext(r.next) 
+                     setOther(r.other) 
                      setValue(r.value) 
                      }) 
- }}>Next: {next}</div></div>
+ }}>Next: {next}</div><div onClick={()=>{ 
+ if(next) 
+ window.server_call('http://localhost:8081', 
+                     other, 
+                     {}, 
+                     (r)=>{ 
+                     setNext(r.next) 
+                     setOther(r.other) 
+                     setValue(r.value) 
+                     }) 
+ }}>Other: {other}</div></div>
 }
 
 function App (props){
