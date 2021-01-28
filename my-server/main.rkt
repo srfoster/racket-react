@@ -26,6 +26,6 @@
   (define (next-number-handler) ; I guess this is the shape of json-continuable functions: No params; uses current-request-args
     (show-counter (+ n (arg 'mult))))
 
-  (send/suspend/dispatch (json-continuation next-number-handler n)))
+  (send/suspend/dispatch/json-continuation next-number-handler n))
 
 (start-server)

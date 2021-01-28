@@ -10,6 +10,7 @@
   return
   ~
   class: 
+  useEffect
   (all-from-out website))
 
 (require website
@@ -24,11 +25,11 @@
 (define-syntax (define-component stx)
   (syntax-parse 
     stx
-    [(_ name content)
+    [(_ name content ...)
      #:with name-component (format-id stx "~a-component" #'name)
      #'(begin
 	 (define name-component
-	   (component 'name content))
+	   (component 'name (list content ...)))
 	
 	 (define (name . attrs)
 	   (apply element/not-empty 'name attrs))
@@ -43,7 +44,7 @@
 
   @js{
     function @name (props){
-      @body
+      @(string-join body "\n\n")
     }
   })
 
@@ -100,4 +101,11 @@
 (define (~ . things )
   (~a "!@#$" (string-join things " ") "$#@!"))
 
+
+(define (useEffect . content)
+  @js{
+  useEffect(()=>{
+   @(string-join content "\n")
+  }) 
+  })
 

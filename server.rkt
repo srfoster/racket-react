@@ -7,6 +7,7 @@
 	 dispatch-rules
 	 send/suspend/dispatch/json-continuation
 	 arg
+	 with-current-request-args
 	 )
 
 (require web-server/servlet-env)
