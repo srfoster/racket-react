@@ -2,6 +2,8 @@ import logo from './logo.svg';
 import './App.css';
 import React, { useState, useEffect } from 'react';
 
+import * as Mui from '@material-ui/core';
+
 window.server_call = (host,server_function,data,cb) =>{
 fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
 .then((r)=>{
@@ -10,51 +12,30 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 }
 
 function ContinuationViewer (props){
-  var [next, setNext] = useState()
+  var [loaded, setLoaded] = useState(false)
 
-var [value, setValue] = useState()
-
-var [other, setOther] = useState()
+var [response, setResponse] = useState({})
 
 useEffect(()=>{
- if(next == undefined){
-console.log("...")
+ if(!loaded){
 window.server_call("http://localhost:8081",
                    props.path,
                    {},
                    (r)=>{
-                   setNext(r.next)
-                   setOther(r.other)
-                   setValue(r.value)
+                   setResponse(r)
                    })
+setLoaded(true)
 }
 })
 
-return <div><div>Value: {value}</div><div onClick={()=>{ 
- if(next) 
- window.server_call('http://localhost:8081', 
-                     next, 
-                     {}, 
-                     (r)=>{ 
-                     setNext(r.next) 
-                     setOther(r.other) 
-                     setValue(r.value) 
-                     }) 
- }}>Next: {next}</div><div onClick={()=>{ 
- if(next) 
- window.server_call('http://localhost:8081', 
-                     other, 
-                     {}, 
-                     (r)=>{ 
-                     setNext(r.next) 
-                     setOther(r.other) 
-                     setValue(r.value) 
-                     }) 
- }}>Other: {other}</div></div>
+return <div>{Object.keys(response).map((k)=>{ 
+    return <div><Mui.Chip label={k}></Mui.Chip><span>{response[k].substring(0,10)+'...'}</span></div> 
+ }) 
+}</div>
 }
 
 function App (props){
-  return <div><div style={{padding: 10, border: '1px solid black'}}><ContinuationViewer path="/top"></ContinuationViewer></div><div style={{padding: 10, border: '1px solid black'}}><ContinuationViewer path="/top"></ContinuationViewer></div></div>
+  return <Mui.Container maxWidth="sm"><Mui.Paper><Mui.Paper style={{padding: 20, margin: 10}}><ContinuationViewer path="/top"></ContinuationViewer></Mui.Paper><Mui.Paper style={{padding: 20, margin: 10}}><ContinuationViewer path="/top"></ContinuationViewer></Mui.Paper></Mui.Paper></Mui.Container>
 }
 
 export default App;

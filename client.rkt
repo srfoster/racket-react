@@ -55,6 +55,8 @@
   import './App.css';
   import React, { useState, useEffect } from 'react';
 
+  import * as Mui from '@"@"material-ui/core';
+
   window.server_call = (host,server_function,data,cb) =>{
   fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
   .then((r)=>{
@@ -80,6 +82,7 @@
 		     [#rx"\\$#@!" "}"]
 		     
 		     [#rx"&gt;" ">"] ;Bug: Should only be between delimiters!
+		     [#rx"&lt;" "<"] ;Bug: Should only be between delimiters!
 		     ))
   )
   
@@ -108,4 +111,18 @@
    @(string-join content "\n")
   }) 
   })
+
+(provide (rename-out [Mui.Button Button]))
+(define-component Mui.Button)
+
+(provide (rename-out [Mui.Paper Paper]))
+(define-component Mui.Paper)
+
+(provide (rename-out [Mui.Container Container]))
+(define-component Mui.Container)
+
+(provide (rename-out [Mui.Chip Chip]))
+(define-component Mui.Chip)
+
+
 

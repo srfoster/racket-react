@@ -8,12 +8,14 @@
 	 send/suspend/dispatch/json-continuation
 	 arg
 	 with-current-request-args
-	 )
+	 with-embeds
+	 embed)
 
 (require web-server/servlet-env)
 (require json)
 (require net/uri-codec)
 (require web-server/lang/web-param)
+(require racket/stxparam)
 
 ;TODO: Abstract away requests.
 ;  Just let peope make logic based on passing functions out to front end UI to call with user-produced data
@@ -112,3 +114,16 @@
 		       #"*"))
 		   (response-headers r))]))
 
+
+(define-syntax-parameter embed (syntax-rules ())) 
+
+(define-syntax with-embeds
+  (syntax-rules ()
+    [(_ lines ...)
+     (send/suspend/dispatch
+       (lambda (embed/url)
+	 (syntax-parameterize
+	   ([embed (syntax-rules () 
+		     [(_ f) 
+		      (embed/url (lambda (r) (with-current-request-args r (f))))])])
+	   lines ...)))]))

@@ -2,9 +2,7 @@
 
 (provide start-server)
 
-(require "../server.rkt"
-	 racket/stxparam
-	 )
+(require "../server.rkt")
 
 ;Hmmm.  Top-alt might be preferable.
 ;  Maybe we just return json objects but with continuations serialized into them.
@@ -13,49 +11,24 @@
 
 ; Factor out this fancy macro
 
-(define-syntax-parameter embed (syntax-rules ())) 
-
-(define-syntax with-embeds
-  (syntax-rules ()
-    [(s/s/d/j lines ...)
-     (send/suspend/dispatch
-       (lambda (embed/url)
-	 (syntax-parameterize
-	   ([embed (syntax-rules () 
-		     [(_ f) 
-		      (embed/url (lambda (r) (with-current-request-args r (f))))])])
-	   lines ...)))]))
-
-(define top-alt
-  (thunk 
-    (with-embeds
-      (response/json/cors 
-	(hash 'next (embed top)
-	      'other (embed top2)
-	      'value "Welcome")))))
-
-(define top3
-  (thunk 
+(define (load-script)
+  (with-embeds
     (response/json/cors 
-      (hash 'next #f
-	    'value "End of the story"))))
+      (hash 
+	'script "(hello-world)"))))
 
-(define (top2)
-  (send/suspend/dispatch/json-continuation 
-    top3
-    "Once upon a time"))
-
-(define (top)
-  (send/suspend/dispatch/json-continuation 
-    top2
-    "Hello World!!"))
+(define (welcome)
+  (with-embeds
+    (response/json/cors 
+      (hash 
+	'welcome-msg "Welcome"
+        'load-script (embed load-script)))))
 
 (define-values (do-routing url)
   (dispatch-rules
     [("top")
      (lambda (r) 
-       (top-alt)
-       )]))
+       (welcome))]))
 
 (define (start-server)
   (serve/servlet (start do-routing)

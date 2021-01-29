@@ -2,69 +2,49 @@
 
 (require "../client.rkt")
 
+;Redo continuation viewer now that json payloads can have multiple continuations.  Make it a general JSON viewer with the added ability to call continuations and pass in values of the appropriate types (will need fancy dynamic loading -- i.e. checkboxes for booleans.  Will need to serve up meta-data with JSON responses.
+
+;Allow nesting s-expression jsx inside at-squiggles.  Annoying to have to switch to <This><shit/></This>
+
 ;Fix the single quotes issue.  
 ;Try to macroify stuff.
 ;Try to get rid of boilerplate compilation stuff at bottom
 ;Declare props like path: so we don't have to 'path:
 
-;Redo continuation viewer now that json payloads can have multiple continuations
 
 (define-component ContinuationViewer
-		  @js{var [next, setNext] = useState()} ;Can we macroify??
-		  @js{var [value, setValue] = useState()} ;Can we macroify??
-		  @js{var [other, setOther] = useState()} ;Can we macroify??
+		  @js{var [loaded, setLoaded] = useState(false)} ;Can we macroify??
+		  @js{var [response, setResponse] = useState({})} ;Can we macroify??
 		  (useEffect
 		    @js{
-		    if(next == undefined){
-		    console.log("...")
+		    if(!loaded){
 		    window.server_call("http://localhost:8081",
 				       props.path,
 				       {},
 				       (r)=>{
-				       setNext(r.next)
-				       setOther(r.other)
-				       setValue(r.value)
+				       setResponse(r)
 				       }) 
+		    setLoaded(true)
 		    }
 		    })
 		  (return 
 		    (div
-		      (div "Value: " @~{value})
-		      (div 
-			onClick: @~{()=>{
-			if(next)
-			window.server_call('http://localhost:8081',
-					   next,
-					   {},
-					   (r)=>{
-					   setNext(r.next)
-					   setOther(r.other)
-					   setValue(r.value)
-					   }) 
-			}}
-			"Next: "  @~{next})
-		      (div 
-			onClick: @~{()=>{
-			if(next)
-			window.server_call('http://localhost:8081',
-					   other,
-					   {},
-					   (r)=>{
-					   setNext(r.next)
-					   setOther(r.other)
-					   setValue(r.value)
-					   }) 
-			}}
-			"Other: "  @~{other})
+		      @~{
+		      Object.keys(response).map((k)=>{
+		        return <div><Mui.Chip label={k}></Mui.Chip><span>{response[k].substring(0,10)+'...'}</span></div>				
+		      })
+
+		      }
 		      )))
 
 (define-component App
 		  (return
-		    (div
-		      (div style: @~{{padding: 10, border: '1px solid black'}}
-			(ContinuationViewer 'path: "/top"))
-		      (div style: @~{{padding: 10, border: '1px solid black'}}
-		       (ContinuationViewer 'path: "/top")))))
+		    (Container 'maxWidth: "sm"
+		      (Paper
+			(Paper style: @~{{padding: 20, margin: 10}}
+			     (ContinuationViewer 'path: "/top"))
+			(Paper style: @~{{padding: 20, margin: 10}}
+			     (ContinuationViewer 'path: "/top"))))))
 
 (define components
   (list ContinuationViewer-component App-component))
