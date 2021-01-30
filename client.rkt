@@ -56,6 +56,8 @@
   import React, { useState, useEffect } from 'react';
 
   import * as Mui from '@"@"material-ui/core';
+  import * as I from '@"@"material-ui/icons';
+
 
   window.server_call = (host,server_function,data,cb) =>{
   fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
@@ -124,5 +126,30 @@
 (provide (rename-out [Mui.Chip Chip]))
 (define-component Mui.Chip)
 
+(provide (rename-out [Mui.List List]))
+(define-component Mui.List)
 
+(provide (rename-out [Mui.ListItem ListItem]))
+(define-component Mui.ListItem)
+
+(provide (rename-out [Mui.ListItemIcon ListItemIcon]))
+(define-component Mui.ListItemIcon)
+
+(provide (rename-out [Mui.ListItemText ListItemText]))
+(define-component Mui.ListItemText)
+
+(provide (rename-out [Mui.Box Box]))
+(define-component Mui.Box)
+
+(provide (rename-out [Mui.Card Card]))
+(define-component Mui.Card)
+
+(provide (rename-out [Mui.CardContent CardContent]))
+(define-component Mui.CardContent)
+
+(provide (rename-out [Mui.Typography Typography]))
+(define-component Mui.Typography)
+
+(provide (rename-out [Mui.Icon Icon]))
+(define-component Mui.Icon)
 

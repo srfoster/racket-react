@@ -4,12 +4,7 @@
 
 (require "../server.rkt")
 
-;Hmmm.  Top-alt might be preferable.
-;  Maybe we just return json objects but with continuations serialized into them.
 ;  The client can decide what to call based on its own logic, and/or the meta-data associated with the continuations...
-;  Just clean up the send/suspend/dispatch + lambda + embed/url + lambda + with-current-request-args...
-
-; Factor out this fancy macro
 
 (define (load-script)
   (with-embeds
@@ -17,12 +12,26 @@
       (hash 
 	'script "(hello-world)"))))
 
+(define (load-script-object function-embed)
+  ;Defines the shape of a function json object
+  (hash 
+    'type "function"
+    'name "load-script"
+    ;TODO: Can describe input to function
+
+    ;Save time: Build front end for users while building dev api docs
+    'userDescription "Loads your most recently edited script so you can keep editing it."
+    'devDescription "Loads the logged in user's current script from the database."
+    'function function-embed))
+
 (define (welcome)
   (with-embeds
     (response/json/cors 
       (hash 
 	'welcome-msg "Welcome"
-        'load-script (embed load-script)))))
+        'load-script (load-script-object
+		       (embed load-script))
+	))))
 
 (define-values (do-routing url)
   (dispatch-rules
