@@ -16,7 +16,8 @@
 (require website
 	 syntax/parse/define)
 
-(require (for-syntax racket/syntax))
+(require (for-syntax racket/syntax)
+	 (only-in scribble/text with-writer ))
 
 (define class: 'className:)
 
@@ -30,14 +31,28 @@
      #'(begin
 	 (define name-component
 	   (component 'name (list content ...)))
-	
-	 (define (name . attrs)
-	   (apply element/not-empty 'name attrs))
-	 
-	)
-     ]))
 
-(define js ~a)
+	 (define (name . attrs)
+	   (apply element/not-empty 'name attrs)
+
+
+#;
+	   (lambda ()
+	     (with-writer write-string ;Maybe fixes special characters in attrs?
+			  (with-output-to-string
+			    (thunk
+			      (output-xml 
+				(apply element/not-empty 'name attrs))))))))]))
+
+(define (js . s)
+  (define (->string s)
+    (cond 
+      [(string? s) s]
+      [(procedure? s) (->string (s))]
+      [(symbol? s) (~a s)]
+      [else (remove-special-characters (element->string s))]))
+	
+  (apply ~a (map ->string s)))
 
 (define (compile-component c)
   (match-define (component name body) c)
@@ -75,18 +90,23 @@
 
 
   ;Hacking to produce JSX that wouldn't be valid xml
-  (regexp-replaces pass1
+  (remove-special-characters pass1)
+  )
+
+
+(define (remove-special-characters s)
+  (regexp-replaces s
 		   '(
 		     [#rx"\"!@#\\$" "{"]
 		     [#rx"\\$#@!\"" "}"]
 
 		     [#rx"!@#\\$" "{"]
 		     [#rx"\\$#@!" "}"]
-		     
+
+		     [#rx"&quot;" "\""] ;Bug: Should only be between delimiters!
 		     [#rx"&gt;" ">"] ;Bug: Should only be between delimiters!
 		     [#rx"&lt;" "<"] ;Bug: Should only be between delimiters!
-		     ))
-  )
+		     )))
   
 
 (define (save-app #:to file 
@@ -153,3 +173,32 @@
 (provide (rename-out [Mui.Icon Icon]))
 (define-component Mui.Icon)
 
+(provide (rename-out [Mui.TextField TextField]))
+(define-component Mui.TextField)
+
+(provide (rename-out [Mui.TableContainer TableContainer]))
+(define-component Mui.TableContainer)
+
+(provide (rename-out [Mui.Table Table]))
+(define-component Mui.Table)
+
+(provide (rename-out [Mui.TableHead TableHead]))
+(define-component Mui.TableHead)
+
+(provide (rename-out [Mui.TableBody TableBody]))
+(define-component Mui.TableBody)
+
+(provide (rename-out [Mui.TableRow TableRow]))
+(define-component Mui.TableRow)
+
+(provide (rename-out [Mui.TableCell TableCell]))
+(define-component Mui.TableCell)
+
+(provide (rename-out [Mui.Switch Switch]))
+(define-component Mui.Switch)
+
+(provide (rename-out [I.Code CodeIcon]))
+(define-component I.Code)
+
+(provide (rename-out [I.Person PersonIcon]))
+(define-component I.Person)

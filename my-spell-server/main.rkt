@@ -10,7 +10,10 @@
   (with-embeds
     (response/json/cors 
       (hash 
-	'script "(hello-world)"))))
+	'script "(hello-world)"
+	'isPrivate #t
+	'edit-script (edit-script-object (embed edit-script))
+	))))
 
 (define (load-script-object function-embed)
   ;Defines the shape of a function json object
@@ -23,6 +26,31 @@
     'userDescription "Loads your most recently edited script so you can keep editing it."
     'devDescription "Loads the logged in user's current script from the database."
     'function function-embed))
+
+(define (edit-script)
+  (define new-script (arg 'script))
+  (define new-is-private (arg 'isPrivate))
+
+  (with-embeds
+    (response/json/cors 
+      (hash 
+	'script new-script
+	'isPrivate new-is-private
+	'edit-script (edit-script-object (embed edit-script))
+	))))
+
+(define (edit-script-object function-embed)
+  ;Defines the shape of a function json object
+  (hash 
+    'type "function"
+    'name "edit-script"
+    'arguments (hash 'script "string" 
+		     'isPrivate "boolean")
+    'userDescription "Sets your most recently edited script to the given 'script value."
+    'devDescription "Sets the logged in user's current script to the given 'script value."
+    'function function-embed))
+
+
 
 (define (welcome)
   (with-embeds

@@ -6,95 +6,169 @@
 
 ; Show specially: {type: 'function'}
 
+;Argument types, generate
+;   components for different kinds of input, strings, integers (ranges?), booleans,  
+;   other types
+;   Auto generate the right widget
+;
+;   Support default values, optional values, 
 
-;Allow nesting s-expression jsx inside at-squiggles.  Annoying to have to switch to <This><shit/></This>
+; Make dynamic editors take current value.  How to pass along current value in json??
 
-;Fix the single quotes issue.  
+
+;Widget "tree" is a bit hard to read.
+;  How to show cyclical workflow? Get value and (continually) edit that value
+
+;Hook widgets up to each other.  Build your own workflows...
+
+
+
 ;Try to macroify stuff.
 ;Try to get rid of boilerplate compilation stuff at bottom
 ;Declare props like path: so we don't have to 'path:
 
+;Code has the power to make things that are pretty bad, that work just fine
+
+(define (useState id [input ""])
+  @js{var [@id, set@(string-titlecase (substring (~a id) 0 1))@(substring (~a id) 1 )] = useState(@input)} ;Can we macroify??
+  )
+
+(define-component BasicStringEditor
+		  @js{
+		  return @(TextField 
+			    'onChange: @~{(e) => props.onChange(e.target.value)} 
+			    'label: @~{props.label} 'variant: "outlined")
+		  })
+
+(define-component BasicBooleanEditor
+		  (useState 'checked @js{false})
+		  @js{
+		  return @(Switch
+		    'checked: @~{checked}
+		    'onChange: @~{(e)=>{setChecked(!checked);props.onChange(!checked)}}) 
+		  })
+#;
+		  (
+			   TextField 
+			    'onChange: @~{(e) => props.onChange(e.target.value)} 
+			    'label: @~{props.label} 'variant: "outlined")
+
 (define-component FunctionViewer
-		  @js{var [result, setResult] = useState()} ;Can we macroify??
+		  (useState 'result)
+		  (useState 'outgoingArgs @js{{}})
 		  @js{
 		  const call = ()=>{
 		    window.server_call("http://localhost:8081",
 				       props.wrapper.function,
-				       {},
+				       outgoingArgs,
 				       (r)=>{
 				       setResult(r)
 				       }) 
 		  }
 		  }
+
 		  @js{
-		  console.log(props.wrapper)
+
+		  const editorForType = (t, label, onChange) => {
+		    if(t==="string")
+		    return @(BasicStringEditor 'label: @~{label}
+				     'onChange: @~{onChange}) 
+		    if(t==="boolean")
+		    return @(BasicBooleanEditor 'label: @~{label}
+				     'onChange: @~{onChange}) 
+
+		    return @(div "What's this??")
+		  }
+		  }
+
+		  @js{
 		   return props.wrapper.type == "function" ? 
-		   <Mui.Card> 
-		   
-		   <Mui.CardContent> 
-		   <Mui.Typography component="p" variant="h5">
-		   function 
-		   <Mui.Chip style={{marginLeft: 5}} label={props.wrapper.name}> 
-		   </Mui.Chip>
-		   </Mui.Typography> 
+		   @(Card
 
-		   <Mui.List>
+		      (CardContent
+			(Typography 
+			  'component: "p" 'variant: "h5"
+			  "function: "
+			  (Chip style: @~{{marginLeft: 5}}
+				'label: @~{props.wrapper.name}))
 
-		   <Mui.ListItem>
-		   <Mui.ListItemIcon>
-		   <I.Person fontSize="small" />
-		   </Mui.ListItemIcon>
-		   <Mui.ListItemText>
-		   {props.wrapper.userDescription}
-		   </Mui.ListItemText>
-		   </Mui.ListItem>
+			(List
+			  (ListItem
+			    (ListItemIcon
+			      (PersonIcon 'fontSize: "small"))
+			    (ListItemText
+			      @~{props.wrapper.userDescription}))
 
-		   <Mui.ListItem>
-		   <Mui.ListItemIcon>
-		   <I.Code fontSize="small" />
-		   </Mui.ListItemIcon>
-		   <Mui.ListItemText>
-		   {props.wrapper.devDescription}
-		   </Mui.ListItemText>
-		   </Mui.ListItem>
+			  (ListItem
+			    (ListItemIcon
+			      (CodeIcon 'fontSize: "small"))
+			    (ListItemText
+			      @~{props.wrapper.devDescription})))
 
-		   </Mui.List>
+			(Button 'onClick: @~{call} 'color: "primary" "Call")
+
+			@js{
+			{
+			props.wrapper.arguments ? 
+			@(TableContainer
+			   (TableBody
+			   @js{
+			   {
+				Object.keys(props.wrapper.arguments).map((arg)=>
+				@(TableRow
+				 (TableCell
+				    (Chip 'label: @~{arg}) 
+				      
+				   )
+				 (TableCell
+				   @~{editorForType(props.wrapper.arguments[arg], 
+						     props.wrapper.arguments[arg]
+						     , 
+						     (s)=>{
+						     outgoingArgs[arg] = s
+						     setOutgoingArgs(outgoingArgs);
+						     }
+						     )}
+				   )
+				  )
+				)}}) )
+			: ""
+			}}
 
 
-		   <Mui.Button onClick={call} color="primary">Call</Mui.Button>
 
-		   {result ? <ObjectExplorer object={result}></ObjectExplorer> : "" }
+			;JSX lingers.  Can't ref ObjectExplorer component here
+			@~{result ? <ObjectExplorer object={result}/> : "" }
 
-		   </Mui.CardContent> 
-		   </Mui.Card> 
-		   : <Mui.Chip color="secondary" label={"Not a function: "+ JSON.stringify(props.wrapper)}></Mui.Chip>
+			))
+		   : @(Chip 'color: "secondary" 'label: @~{"Not a function: "+ JSON.stringify(props.wrapper)}) 
 		  })
 
 (define-component ObjectExplorer
 		  @js{var displayResponse = (r)=>{
 		    if(r.type){
 		      if(r.type == "function"){
-		        return <FunctionViewer wrapper={r}></FunctionViewer>
+		        return @(FunctionViewer 'wrapper: @~{r})
 		      }
 		    }
 
 		    if(typeof(r) == "object"){
 		      return Object.keys(r).map((k)=>{
-		        return (<Mui.List>
-			  <Mui.ListItem>
-			  <Mui.ListItemIcon>
-			    <Mui.Chip label={k}></Mui.Chip>
-			  </Mui.ListItemIcon>
-			  <Mui.ListItemText>
-			    <Mui.Paper style={{margin: 5}}>{displayResponse(r[k])}</Mui.Paper>
-			  </Mui.ListItemText>
-			  </Mui.ListItem>
-			</Mui.List>) 	
+		        return @(List
+				   (ListItem
+				     (ListItemIcon (Chip 'label: @~{k}))
+				     (ListItemText
+				       (Box style: @~{{margin: 5, padding: 5}} 
+					    @~{displayResponse(r[k])}))))
 		      })
 		    } 
 
 		    if(typeof(r) == "string"){
-		      return "String: " + r
+		      return "\"" + r + "\""
+		    }
+
+		    if(typeof(r) == "boolean"){
+		      return ""+r 
 		    }
 
 		    return typeof(r) 
@@ -123,13 +197,13 @@
 		    }
 		    })
 		  @js{
-		      return response ? <ObjectExplorer object={response} /> : "waiting..." 
+		      return response ? @(ObjectExplorer 'object: @~{response}) : "waiting on response..." 
 		      }
 		  )
 
 (define-component App
 		  (return
-		    (Container 'maxWidth: "sm"
+		    (Container 
 		      (Paper
 			(Paper style: @~{{padding: 20, margin: 10}}
 			     (ContinuationViewer 'path: "/top"))
@@ -137,8 +211,15 @@
 			     (ContinuationViewer 'path: "/top"))))))
 
 (define components
-  (list FunctionViewer-component ObjectExplorer-component ContinuationViewer-component App-component))
+  (list BasicBooleanEditor-component BasicStringEditor-component FunctionViewer-component ObjectExplorer-component ContinuationViewer-component App-component))
 
 (displayln (compile-app components))
 
 (save-app #:to "my-spell-app/src/App.js" components)
+
+
+;(displayln @js{@(ObjectExplorer 'object: @~{response})})
+
+
+
+
