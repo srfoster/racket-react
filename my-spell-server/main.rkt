@@ -2,7 +2,7 @@
 
 (provide start-server)
 
-(require "../server.rkt")
+(require "../server.rkt" json)
 
 ;  The client can decide what to call based on its own logic, and/or the meta-data associated with the continuations...
 
@@ -12,7 +12,10 @@
       (hash 
 	'script "(hello-world)"
 	'isPrivate #t
-	'edit-script (edit-script-object (embed edit-script))
+	'edit-script (edit-script-object 
+		       #:script "(hello-world)"
+		       #:isPrivate #t
+		       (embed edit-script))
 	))))
 
 (define (load-script-object function-embed)
@@ -36,16 +39,30 @@
       (hash 
 	'script new-script
 	'isPrivate new-is-private
-	'edit-script (edit-script-object (embed edit-script))
+	'edit-script (edit-script-object 
+		       #:script new-script
+		       #:isPrivate new-is-private
+		       (embed edit-script))
 	))))
 
-(define (edit-script-object function-embed)
+(define (edit-script-object function-embed
+			    ;Params are for when a function takes arguments
+			    ;  that have "current values" -->
+			    ;Meaning that passing in the same values twice in a row
+			    ;  should not change the world:
+			    ;Pass in the same script and isPrivate variable, then
+			    ;  the script shouldn't change
+			    ;(Not all functions will have side effects, so won't always use)
+			    #:script [script (json-null)]
+			    #:isPrivate [isPrivate (json-null)])
   ;Defines the shape of a function json object
   (hash 
     'type "function"
     'name "edit-script"
-    'arguments (hash 'script "string" 
-		     'isPrivate "boolean")
+    'arguments (hash 'script (hash 'type "argument" 'argumentType "string"
+				   'defaultValue script)
+		     'isPrivate (hash 'type "argument" 'argumentType "boolean"
+				      'defaultValue isPrivate))
     'userDescription "Sets your most recently edited script to the given 'script value."
     'devDescription "Sets the logged in user's current script to the given 'script value."
     'function function-embed))

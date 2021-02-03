@@ -14,13 +14,15 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 }
 
 function BasicBooleanEditor (props){
-  var [checked, setChecked] = useState(false)
+  var [checked, setChecked] = useState(props.value)
 
 return <Mui.Switch checked={checked} onChange={(e)=>{setChecked(!checked);props.onChange(!checked)}}></Mui.Switch>
 }
 
 function BasicStringEditor (props){
-  return <Mui.TextField onChange={(e) => props.onChange(e.target.value)} label={props.label} variant="outlined"></Mui.TextField>
+  var [value, setValue] = useState(props.value)
+
+return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
 }
 
 function FunctionViewer (props){
@@ -33,16 +35,18 @@ const call = ()=>{
                      props.wrapper.function,
                      outgoingArgs,
                      (r)=>{
+                     console.log(r)
                      setResult(r)
                      })
 }
 
 
-const editorForType = (t, label, onChange) => {
-  if(t==="string")
-  return <BasicStringEditor label={label} onChange={onChange}></BasicStringEditor>
-  if(t==="boolean")
-  return <BasicBooleanEditor label={label} onChange={onChange}></BasicBooleanEditor>
+const editorForType = (t, onChange) => {
+  if(t.argumentType ==="string")
+  return <BasicStringEditor value={t.defaultValue} label={t.argumentType} onChange={onChange}></BasicStringEditor>
+
+  if(t.argumentType ==="boolean")
+  return <BasicBooleanEditor value={t.defaultValue} label={t.argumentType} onChange={onChange}></BasicBooleanEditor>
 
   return <div>What's this??</div>
 }
@@ -53,8 +57,6 @@ props.wrapper.arguments ?
 <Mui.TableContainer><Mui.TableBody>{
      Object.keys(props.wrapper.arguments).map((arg)=>
      <Mui.TableRow><Mui.TableCell><Mui.Chip label={arg}></Mui.Chip></Mui.TableCell><Mui.TableCell>{editorForType(props.wrapper.arguments[arg], 
-                 props.wrapper.arguments[arg] 
-                 , 
                  (s)=>{ 
                  outgoingArgs[arg] = s 
                  setOutgoingArgs(outgoingArgs); 
@@ -71,6 +73,9 @@ function ObjectExplorer (props){
   if(r.type){
     if(r.type == "function"){
       return <FunctionViewer wrapper={r}></FunctionViewer>
+    }
+    if(r.type == "argument"){
+      return "Arg"
     }
   }
 

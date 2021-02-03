@@ -23,6 +23,7 @@
 
 
 
+;Factor out components into libraries
 ;Try to macroify stuff.
 ;Try to get rid of boilerplate compilation stuff at bottom
 ;Declare props like path: so we don't have to 'path:
@@ -34,14 +35,19 @@
   )
 
 (define-component BasicStringEditor
+		  (useState 'value @js{props.value})
 		  @js{
 		  return @(TextField 
-			    'onChange: @~{(e) => props.onChange(e.target.value)} 
-			    'label: @~{props.label} 'variant: "outlined")
-		  })
+			    'onChange: @~{(e) => {setValue(e.target.value); props.onChange(e.target.value)}} 
+			    'label: @~{props.label} 
+			    'value: @~{value} 
+			    'variant: "outlined"
+			    )
+		  }
+		  )
 
 (define-component BasicBooleanEditor
-		  (useState 'checked @js{false})
+		  (useState 'checked @js{props.value})
 		  @js{
 		  return @(Switch
 		    'checked: @~{checked}
@@ -62,6 +68,7 @@
 				       props.wrapper.function,
 				       outgoingArgs,
 				       (r)=>{
+				       console.log(r)
 				       setResult(r)
 				       }) 
 		  }
@@ -69,13 +76,18 @@
 
 		  @js{
 
-		  const editorForType = (t, label, onChange) => {
-		    if(t==="string")
-		    return @(BasicStringEditor 'label: @~{label}
-				     'onChange: @~{onChange}) 
-		    if(t==="boolean")
-		    return @(BasicBooleanEditor 'label: @~{label}
-				     'onChange: @~{onChange}) 
+		  const editorForType = (t, onChange) => {
+		    if(t.argumentType ==="string")
+		    return @(BasicStringEditor 
+			      'value: @~{t.defaultValue}
+			      'label: @~{t.argumentType}
+			      'onChange: @~{onChange}) 
+
+		    if(t.argumentType ==="boolean")
+		    return @(BasicBooleanEditor 
+			      'value: @~{t.defaultValue}
+			      'label: @~{t.argumentType}
+			      'onChange: @~{onChange}) 
 
 		    return @(div "What's this??")
 		  }
@@ -120,10 +132,8 @@
 				    (Chip 'label: @~{arg}) 
 				      
 				   )
-				 (TableCell
-				   @~{editorForType(props.wrapper.arguments[arg], 
-						     props.wrapper.arguments[arg]
-						     , 
+				 @(TableCell
+				   @~{editorForType(props.wrapper.arguments[arg],
 						     (s)=>{
 						     outgoingArgs[arg] = s
 						     setOutgoingArgs(outgoingArgs);
@@ -149,6 +159,9 @@
 		    if(r.type){
 		      if(r.type == "function"){
 		        return @(FunctionViewer 'wrapper: @~{r})
+		      }
+		      if(r.type == "argument"){
+		        return "Arg"
 		      }
 		    }
 
