@@ -10,9 +10,10 @@
   (with-embeds
     (response/json/cors 
       (hash 
+	'type "script"
 	'script "(hello-world)"
 	'isPrivate #t
-	'edit-script (edit-script-object 
+	'editScript (edit-script-object 
 		       #:script "(hello-world)"
 		       #:isPrivate #t
 		       (embed edit-script))
@@ -31,15 +32,19 @@
     'function function-embed))
 
 (define (edit-script)
-  (define new-script (arg 'script))
+  (define new-script (arg 'script)) 
   (define new-is-private (arg 'isPrivate))
+
+ (displayln "Editing to")
+ (displayln new-script)
 
   (with-embeds
     (response/json/cors 
       (hash 
+	'type "script"
 	'script new-script
 	'isPrivate new-is-private
-	'edit-script (edit-script-object 
+	'editScript (edit-script-object 
 		       #:script new-script
 		       #:isPrivate new-is-private
 		       (embed edit-script))

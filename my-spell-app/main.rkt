@@ -2,25 +2,17 @@
 
 (require "../client.rkt")
 
-;Redo continuation viewer now that json payloads can have multiple continuations.  Make it a general JSON viewer with the added ability to call continuations and pass in values of the appropriate types (will need fancy dynamic loading -- i.e. checkboxes for booleans.  Will need to serve up meta-data with JSON responses.
-
-; Show specially: {type: 'function'}
+;Factor out css, abstract away the code mirror imports.  Make
+; this something I can reuse across react projects
 
 ;Argument types, generate
 ;   components for different kinds of input, strings, integers (ranges?), booleans,  
 ;   other types
-;   Auto generate the right widget
-;
-;   Support default values, optional values, 
-
-; Make dynamic editors take current value.  How to pass along current value in json??
-
 
 ;Widget "tree" is a bit hard to read.
 ;  How to show cyclical workflow? Get value and (continually) edit that value
 
 ;Hook widgets up to each other.  Build your own workflows...
-
 
 
 ;Factor out components into libraries
@@ -30,9 +22,55 @@
 
 ;Code has the power to make things that are pretty bad, that work just fine
 
-(define (useState id [input ""])
-  @js{var [@id, set@(string-titlecase (substring (~a id) 0 1))@(substring (~a id) 1 )] = useState(@input)} ;Can we macroify??
+(add-import
+  @js{
+  require('codemirror/mode/scheme/scheme');
+  })
+(add-import
+  @js{import {UnControlled as CodeMirror} from 'react-codemirror2' }
   )
+(define-component ScriptEditor
+		  @(useState 'value @js{props.script.script})
+		  @js{
+		  return <div>
+
+		  <CodeMirror
+		  value='(define x 2)'
+		  options={{
+		  mode: 'scheme',
+		  theme: 'material',
+		  lineNumbers: true
+		  }}
+		  onChange={(editor, data, value) => {
+		    window.server_call("http://localhost:8081",
+				       props.script.editScript.function,
+				       {script: value,
+				       isPrivate: true},
+				       (r)=>{
+				       setValue(r.script)
+				       }) 
+
+		  }}
+		  />
+
+		  </div>
+		  })
+
+(define-component DomainSpecificUI
+		  @js{
+                  const display = (thing)=>{
+		    if(thing.type=="script") {
+                      return @(ScriptEditor 'script: @~{thing})
+		    } else {
+                      return "Unknown Type: " + thing.type
+		    }
+		  }
+		  }
+		  @js{
+		  return display(props.wrapper) 
+		  })
+
+
 
 (define-component BasicStringEditor
 		  (useState 'value @js{props.value})
@@ -52,23 +90,24 @@
 		  return @(Switch
 		    'checked: @~{checked}
 		    'onChange: @~{(e)=>{setChecked(!checked);props.onChange(!checked)}}) 
-		  })
-#;
-		  (
-			   TextField 
-			    'onChange: @~{(e) => props.onChange(e.target.value)} 
-			    'label: @~{props.label} 'variant: "outlined")
+		  }
+		  )
 
 (define-component FunctionViewer
 		  (useState 'result)
 		  (useState 'outgoingArgs @js{{}})
 		  @js{
 		  const call = ()=>{
+		    Object.keys(props.wrapper.arguments || {}).map((k)=>{
+		      let defaultValue = props.wrapper.arguments[k].defaultValue;
+                      if(defaultValue && outgoingArgs[k] === undefined)
+                        outgoingArgs[k] = defaultValue
+		    })
+
 		    window.server_call("http://localhost:8081",
 				       props.wrapper.function,
 				       outgoingArgs,
 				       (r)=>{
-				       console.log(r)
 				       setResult(r)
 				       }) 
 		  }
@@ -87,7 +126,7 @@
 		    return @(BasicBooleanEditor 
 			      'value: @~{t.defaultValue}
 			      'label: @~{t.argumentType}
-			      'onChange: @~{onChange}) 
+			      'onChange: @~{onChange})
 
 		    return @(div "What's this??")
 		  }
@@ -135,8 +174,10 @@
 				 @(TableCell
 				   @~{editorForType(props.wrapper.arguments[arg],
 						     (s)=>{
-						     outgoingArgs[arg] = s
-						     setOutgoingArgs(outgoingArgs);
+						     console.log(s)
+						     var newArgs = {...outgoingArgs}
+						     newArgs[arg] = s
+						     setOutgoingArgs(newArgs);
 						     }
 						     )}
 				   )
@@ -163,6 +204,7 @@
 		      if(r.type == "argument"){
 		        return "Arg"
 		      }
+		      return @(DomainSpecificUI 'wrapper: @~{r})
 		    }
 
 		    if(typeof(r) == "object"){
@@ -217,14 +259,11 @@
 (define-component App
 		  (return
 		    (Container 
-		      (Paper
-			(Paper style: @~{{padding: 20, margin: 10}}
-			     (ContinuationViewer 'path: "/top"))
-			(Paper style: @~{{padding: 20, margin: 10}}
-			     (ContinuationViewer 'path: "/top"))))))
+		      (ContinuationViewer 'path: "/top")
+		      )))
 
 (define components
-  (list BasicBooleanEditor-component BasicStringEditor-component FunctionViewer-component ObjectExplorer-component ContinuationViewer-component App-component))
+  (list ScriptEditor-component DomainSpecificUI-component BasicBooleanEditor-component BasicStringEditor-component FunctionViewer-component ObjectExplorer-component ContinuationViewer-component App-component))
 
 (displayln (compile-app components))
 

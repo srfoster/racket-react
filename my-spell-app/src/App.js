@@ -5,12 +5,55 @@ import React, { useState, useEffect } from 'react';
 import * as Mui from '@material-ui/core';
 import * as I from '@material-ui/icons';
 
+import {UnControlled as CodeMirror} from 'react-codemirror2' 
+
+require('codemirror/mode/scheme/scheme');
 
 window.server_call = (host,server_function,data,cb) =>{
 fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
 .then((r)=>{
       cb(r)
       })
+}
+
+
+function ScriptEditor (props){
+  var [value, setValue] = useState(props.script.script)
+
+return <div>
+
+<CodeMirror
+value='(define x 2)'
+options={{
+mode: 'scheme',
+theme: 'material',
+lineNumbers: true
+}}
+onChange={(editor, data, value) => {
+  window.server_call("http://localhost:8081",
+                     props.script.editScript.function,
+                     {script: value,
+                     isPrivate: true},
+                     (r)=>{
+                     setValue(r.script)
+                     })
+
+}}
+/>
+
+</div>
+}
+
+function DomainSpecificUI (props){
+  const display = (thing)=>{
+  if(thing.type=="script") {
+    return <ScriptEditor script={thing}></ScriptEditor>
+  } else {
+    return "Unknown Type: " + thing.type
+  }
+}
+
+return display(props.wrapper)
 }
 
 function BasicBooleanEditor (props){
@@ -31,11 +74,16 @@ function FunctionViewer (props){
 var [outgoingArgs, setOutgoingArgs] = useState({})
 
 const call = ()=>{
+  Object.keys(props.wrapper.arguments || {}).map((k)=>{
+    let defaultValue = props.wrapper.arguments[k].defaultValue;
+    if(defaultValue && outgoingArgs[k] === undefined)
+      outgoingArgs[k] = defaultValue
+  })
+
   window.server_call("http://localhost:8081",
                      props.wrapper.function,
                      outgoingArgs,
                      (r)=>{
-                     console.log(r)
                      setResult(r)
                      })
 }
@@ -58,8 +106,10 @@ props.wrapper.arguments ?
      Object.keys(props.wrapper.arguments).map((arg)=>
      <Mui.TableRow><Mui.TableCell><Mui.Chip label={arg}></Mui.Chip></Mui.TableCell><Mui.TableCell>{editorForType(props.wrapper.arguments[arg], 
                  (s)=>{ 
-                 outgoingArgs[arg] = s 
-                 setOutgoingArgs(outgoingArgs); 
+                 console.log(s) 
+                 var newArgs = {...outgoingArgs} 
+                 newArgs[arg] = s 
+                 setOutgoingArgs(newArgs); 
                  } 
                  )}</Mui.TableCell></Mui.TableRow>
      )}</Mui.TableBody></Mui.TableContainer>
@@ -77,6 +127,7 @@ function ObjectExplorer (props){
     if(r.type == "argument"){
       return "Arg"
     }
+    return <DomainSpecificUI wrapper={r}></DomainSpecificUI>
   }
 
   if(typeof(r) == "object"){
@@ -120,7 +171,7 @@ return response ? <ObjectExplorer object={response}></ObjectExplorer> : "waiting
 }
 
 function App (props){
-  return <Mui.Container><Mui.Paper><Mui.Paper style={{padding: 20, margin: 10}}><ContinuationViewer path="/top"></ContinuationViewer></Mui.Paper><Mui.Paper style={{padding: 20, margin: 10}}><ContinuationViewer path="/top"></ContinuationViewer></Mui.Paper></Mui.Paper></Mui.Container>
+  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
 }
 
 export default App;

@@ -11,6 +11,8 @@
   ~
   class: 
   useEffect
+  useState
+  add-import
   (all-from-out website))
 
 (require website
@@ -73,6 +75,9 @@
   import * as Mui from '@"@"material-ui/core';
   import * as I from '@"@"material-ui/icons';
 
+  @(string-join
+     imports
+     "\n\n")
 
   window.server_call = (host,server_function,data,cb) =>{
   fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
@@ -80,6 +85,7 @@
 	cb(r)
 	})
   }
+
 
   @(string-join
      (map compile-component components)
@@ -133,6 +139,15 @@
    @(string-join content "\n")
   }) 
   })
+
+(define (useState id [input ""])
+  @js{var [@id, set@(string-titlecase (substring (~a id) 0 1))@(substring (~a id) 1 )] = useState(@input)} ;Can we macroify??
+  )
+
+
+(define imports '())
+(define (add-import line)
+  (set! imports (cons line imports)))
 
 (provide (rename-out [Mui.Button Button]))
 (define-component Mui.Button)
