@@ -5,7 +5,7 @@
 (require racket-react/client)
 
 (define-component CodeEditor
-		  (add-import
+		  (add-post-import
 		    @js{
 		    require('codemirror/mode/scheme/scheme');
 		    })

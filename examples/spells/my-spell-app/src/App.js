@@ -7,6 +7,9 @@ import * as I from '@material-ui/icons';
 
 import {UnControlled as CodeMirror} from 'react-codemirror2' 
 
+import { Impress, Step } from 'react-impressjs';
+import 'react-impressjs/styles/react-impressjs.css';
+
 require('codemirror/mode/scheme/scheme');
 
 window.server_call = (host,server_function,data,cb) =>{
@@ -18,7 +21,28 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 
 
 function App (props){
-  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
+  return <Mui.Container>
+<Impress
+progress={true}
+fallbackMessage={<p>Sorry, your <b>device or browser</b> couldn't support well.</p>}
+>
+<Step id={'overview'} />
+<Step id={'any_id'} className={'class_name'} />
+<Step className={'without_id_is_ok'}
+data={
+{
+x:100,
+y:-100,
+scale:2
+}}/>
+<Step duration={1500}>
+<h1>Any Element write in Step!</h1>
+<hr />
+<p>Made by your <b>Creativity</b> !!</p>
+<ContinuationViewer path="/top"></ContinuationViewer>
+</Step>
+</Impress>
+</Mui.Container>
 }
 
 function ContinuationViewer (props){
@@ -152,8 +176,6 @@ function CodeEditor (props){
 
 return <div>
 
-<Test></Test>
-
 <CodeMirror
 value='(define x 2)'
 options={{
@@ -174,10 +196,6 @@ window.server_call("http://localhost:8081",
 />
 
 </div>
-}
-
-function Test (props){
-  return "TEST"
 }
 
 export default App;

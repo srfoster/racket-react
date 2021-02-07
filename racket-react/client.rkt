@@ -13,6 +13,7 @@
   useEffect
   useState
   add-import
+  add-post-import
   components
   add-component!
   (all-from-out website))
@@ -90,6 +91,10 @@
      imports
      "\n\n")
 
+  @(string-join
+     post-imports
+     "\n\n")
+
   window.server_call = (host,server_function,data,cb) =>{
   fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
   .then((r)=>{
@@ -159,6 +164,10 @@
 (define imports '())
 (define (add-import line)
   (set! imports (cons line imports)))
+
+(define post-imports '())
+(define (add-post-import line)
+  (set! post-imports (cons line post-imports)))
 
 (provide (rename-out [Mui.Button Button]))
 (define-foreign-component Mui.Button)

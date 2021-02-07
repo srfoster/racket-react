@@ -11,6 +11,15 @@ React components bound to server-side continuations
 ;      npm import
 
 ;Start personal component library!  Spellbook
+  * ffmpeg
+  * vim wasm
+  * cytoscape
+  * racket REPL
+  * JSON Api explorer / webapp construction tools
+  * Racket IDE
+  * p5 embeds
+  * Codepen
+  * Prezi / impress.js
 
 ;Figure out how to serve react frontend from racket-react/server
 
