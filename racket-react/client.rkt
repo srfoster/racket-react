@@ -13,6 +13,8 @@
   useEffect
   useState
   add-import
+  components
+  add-component!
   (all-from-out website))
 
 (require website
@@ -25,26 +27,35 @@
 
 (struct component (name body))
 
+(define components '())
+(define (add-component! c)
+  (set! components (cons c components)))
+
+(define-syntax (define-foreign-component stx)
+  (syntax-parse 
+    stx
+    [(_ name content ...)
+     #:with name-component (format-id stx "~a-component" #'name)
+     #'(begin
+	 (define (name . attrs)
+	   (apply element/not-empty 'name attrs))
+	 )]))
+
 (define-syntax (define-component stx)
   (syntax-parse 
     stx
     [(_ name content ...)
      #:with name-component (format-id stx "~a-component" #'name)
      #'(begin
-	 (define name-component
+	 (define (name-component)
 	   (component 'name (list content ...)))
 
 	 (define (name . attrs)
-	   (apply element/not-empty 'name attrs)
+	   (apply element/not-empty 'name attrs))
 
+	 (add-component! name-component)
 
-#;
-	   (lambda ()
-	     (with-writer write-string ;Maybe fixes special characters in attrs?
-			  (with-output-to-string
-			    (thunk
-			      (output-xml 
-				(apply element/not-empty 'name attrs))))))))]))
+	 )]))
 
 (define (js . s)
   (define (->string s)
@@ -61,7 +72,7 @@
 
   @js{
     function @name (props){
-      @(string-join body "\n\n")
+      @(string-join (filter (not/c void?) body) "\n\n")
     }
   })
 
@@ -88,7 +99,8 @@
 
 
   @(string-join
-     (map compile-component components)
+     (map (lambda (c) 
+	    (compile-component (c))) components)
      "\n\n")
 
   export default App;
@@ -115,8 +127,7 @@
 		     )))
   
 
-(define (save-app #:to file 
-		  components)
+(define (save-app #:to file)
   (with-output-to-file 
     file
     #:exists 'replace
@@ -150,70 +161,70 @@
   (set! imports (cons line imports)))
 
 (provide (rename-out [Mui.Button Button]))
-(define-component Mui.Button)
+(define-foreign-component Mui.Button)
 
 (provide (rename-out [Mui.Paper Paper]))
-(define-component Mui.Paper)
+(define-foreign-component Mui.Paper)
 
 (provide (rename-out [Mui.Container Container]))
-(define-component Mui.Container)
+(define-foreign-component Mui.Container)
 
 (provide (rename-out [Mui.Chip Chip]))
-(define-component Mui.Chip)
+(define-foreign-component Mui.Chip)
 
 (provide (rename-out [Mui.List List]))
-(define-component Mui.List)
+(define-foreign-component Mui.List)
 
 (provide (rename-out [Mui.ListItem ListItem]))
-(define-component Mui.ListItem)
+(define-foreign-component Mui.ListItem)
 
 (provide (rename-out [Mui.ListItemIcon ListItemIcon]))
-(define-component Mui.ListItemIcon)
+(define-foreign-component Mui.ListItemIcon)
 
 (provide (rename-out [Mui.ListItemText ListItemText]))
-(define-component Mui.ListItemText)
+(define-foreign-component Mui.ListItemText)
 
 (provide (rename-out [Mui.Box Box]))
-(define-component Mui.Box)
+(define-foreign-component Mui.Box)
 
 (provide (rename-out [Mui.Card Card]))
-(define-component Mui.Card)
+(define-foreign-component Mui.Card)
 
 (provide (rename-out [Mui.CardContent CardContent]))
-(define-component Mui.CardContent)
+(define-foreign-component Mui.CardContent)
 
 (provide (rename-out [Mui.Typography Typography]))
-(define-component Mui.Typography)
+(define-foreign-component Mui.Typography)
 
 (provide (rename-out [Mui.Icon Icon]))
-(define-component Mui.Icon)
+(define-foreign-component Mui.Icon)
 
 (provide (rename-out [Mui.TextField TextField]))
-(define-component Mui.TextField)
+(define-foreign-component Mui.TextField)
 
 (provide (rename-out [Mui.TableContainer TableContainer]))
-(define-component Mui.TableContainer)
+(define-foreign-component Mui.TableContainer)
 
 (provide (rename-out [Mui.Table Table]))
-(define-component Mui.Table)
+(define-foreign-component Mui.Table)
 
 (provide (rename-out [Mui.TableHead TableHead]))
-(define-component Mui.TableHead)
+(define-foreign-component Mui.TableHead)
 
 (provide (rename-out [Mui.TableBody TableBody]))
-(define-component Mui.TableBody)
+(define-foreign-component Mui.TableBody)
 
 (provide (rename-out [Mui.TableRow TableRow]))
-(define-component Mui.TableRow)
+(define-foreign-component Mui.TableRow)
 
 (provide (rename-out [Mui.TableCell TableCell]))
-(define-component Mui.TableCell)
+(define-foreign-component Mui.TableCell)
 
 (provide (rename-out [Mui.Switch Switch]))
-(define-component Mui.Switch)
+(define-foreign-component Mui.Switch)
 
 (provide (rename-out [I.Code CodeIcon]))
-(define-component I.Code)
+(define-foreign-component I.Code)
 
 (provide (rename-out [I.Person PersonIcon]))
-(define-component I.Person)
+(define-foreign-component I.Person)

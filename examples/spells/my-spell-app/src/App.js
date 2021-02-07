@@ -17,55 +17,60 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 }
 
 
-function ScriptEditor (props){
-  var [value, setValue] = useState(props.script.script)
-
-return <div>
-
-<CodeMirror
-value='(define x 2)'
-options={{
-mode: 'scheme',
-theme: 'material',
-lineNumbers: true
-}}
-onChange={(editor, data, value) => {
-  window.server_call("http://localhost:8081",
-                     props.script.editScript.function,
-                     {script: value,
-                     isPrivate: true},
-                     (r)=>{
-                     setValue(r.script)
-                     })
-
-}}
-/>
-
-</div>
+function App (props){
+  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
 }
 
-function DomainSpecificUI (props){
-  const display = (thing)=>{
-  if(thing.type=="script") {
-    return <ScriptEditor script={thing}></ScriptEditor>
-  } else {
-    return "Unknown Type: " + thing.type
+function ContinuationViewer (props){
+  var [loaded, setLoaded] = useState(false)
+
+var [response, setResponse] = useState({})
+
+useEffect(()=>{
+ if(!loaded){
+window.server_call("http://localhost:8081",
+                   props.path,
+                   {},
+                   (r)=>{
+                   setResponse(r)
+                   })
+setLoaded(true)
+}
+})
+
+return response ? <ObjectExplorer object={response}></ObjectExplorer> : "waiting on response..."
+}
+
+function ObjectExplorer (props){
+  var displayResponse = (r)=>{
+  if(r.type){
+    if(r.type == "function"){
+      return <FunctionViewer wrapper={r}></FunctionViewer>
+    }
+    if(r.type == "argument"){
+      return "Arg"
+    }
+    return <DomainSpecificUI wrapper={r}></DomainSpecificUI>
   }
+
+  if(typeof(r) == "object"){
+    return Object.keys(r).map((k)=>{
+      return <Mui.List><Mui.ListItem><Mui.ListItemIcon><Mui.Chip label={k}></Mui.Chip></Mui.ListItemIcon><Mui.ListItemText><Mui.Box style={{margin: 5, padding: 5}}>{displayResponse(r[k])}</Mui.Box></Mui.ListItemText></Mui.ListItem></Mui.List>
+    })
+  }
+
+  if(typeof(r) == "string"){
+    return "\"" + r + "\""
+  }
+
+  if(typeof(r) == "boolean"){
+    return ""+r
+  }
+
+  return typeof(r)
 }
 
-return display(props.wrapper)
-}
-
-function BasicBooleanEditor (props){
-  var [checked, setChecked] = useState(props.value)
-
-return <Mui.Switch checked={checked} onChange={(e)=>{setChecked(!checked);props.onChange(!checked)}}></Mui.Switch>
-}
-
-function BasicStringEditor (props){
-  var [value, setValue] = useState(props.value)
-
-return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
+return displayResponse(props.object)
 }
 
 function FunctionViewer (props){
@@ -114,64 +119,65 @@ props.wrapper.arguments ?
                  )}</Mui.TableCell></Mui.TableRow>
      )}</Mui.TableBody></Mui.TableContainer>
 : ""
-}{result ? <ObjectExplorer object={result}/> : "" }</Mui.CardContent></Mui.Card>
+}{result ? <ObjectExplorer object={result}></ObjectExplorer> : "" }</Mui.CardContent></Mui.Card>
 : <Mui.Chip color="secondary" label={"Not a function: "+ JSON.stringify(props.wrapper)}></Mui.Chip>
 }
 
-function ObjectExplorer (props){
-  var displayResponse = (r)=>{
-  if(r.type){
-    if(r.type == "function"){
-      return <FunctionViewer wrapper={r}></FunctionViewer>
-    }
-    if(r.type == "argument"){
-      return "Arg"
-    }
-    return <DomainSpecificUI wrapper={r}></DomainSpecificUI>
-  }
+function BasicBooleanEditor (props){
+  var [checked, setChecked] = useState(props.value)
 
-  if(typeof(r) == "object"){
-    return Object.keys(r).map((k)=>{
-      return <Mui.List><Mui.ListItem><Mui.ListItemIcon><Mui.Chip label={k}></Mui.Chip></Mui.ListItemIcon><Mui.ListItemText><Mui.Box style={{margin: 5, padding: 5}}>{displayResponse(r[k])}</Mui.Box></Mui.ListItemText></Mui.ListItem></Mui.List>
-    })
-  }
-
-  if(typeof(r) == "string"){
-    return "\"" + r + "\""
-  }
-
-  if(typeof(r) == "boolean"){
-    return ""+r
-  }
-
-  return typeof(r)
+return <Mui.Switch checked={checked} onChange={(e)=>{setChecked(!checked);props.onChange(!checked)}}></Mui.Switch>
 }
 
-return displayResponse(props.object)
+function BasicStringEditor (props){
+  var [value, setValue] = useState(props.value)
+
+return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
 }
 
-function ContinuationViewer (props){
-  var [loaded, setLoaded] = useState(false)
+function DomainSpecificUI (props){
+  const display = (thing)=>{
+  if(thing.type=="script") {
+    return <CodeEditor script={thing}></CodeEditor>
+  } else {
+    return "Unknown Type: " + thing.type
+  }
+}
 
-var [response, setResponse] = useState({})
+return display(props.wrapper)
+}
 
-useEffect(()=>{
- if(!loaded){
+function CodeEditor (props){
+  var [value, setValue] = useState(props.script.script)
+
+return <div>
+
+<Test></Test>
+
+<CodeMirror
+value='(define x 2)'
+options={{
+mode: 'scheme',
+theme: 'material',
+lineNumbers: true
+}}
+onChange={(editor, data, value) => {
 window.server_call("http://localhost:8081",
-                   props.path,
-                   {},
+                   props.script.editScript.function,
+                   {script: value,
+                   isPrivate: true},
                    (r)=>{
-                   setResponse(r)
+                   setValue(r.script)
                    })
-setLoaded(true)
-}
-})
 
-return response ? <ObjectExplorer object={response}></ObjectExplorer> : "waiting on response..."
+}}
+/>
+
+</div>
 }
 
-function App (props){
-  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
+function Test (props){
+  return "TEST"
 }
 
 export default App;

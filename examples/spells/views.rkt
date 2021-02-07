@@ -1,66 +1,15 @@
 #lang at-exp racket
 
-(require "../client.rkt")
+(require racket-react/client
+	 racket-react/components/code-editor)
 
-;Factor out css, abstract away the code mirror imports.  Make
-; this something I can reuse across react projects
-
-;Argument types, generate
-;   components for different kinds of input, strings, integers (ranges?), booleans,  
-;   other types
-
-;Widget "tree" is a bit hard to read.
-;  How to show cyclical workflow? Get value and (continually) edit that value
-
-;Hook widgets up to each other.  Build your own workflows...
-
-
-;Factor out components into libraries
-;Try to macroify stuff.
-;Try to get rid of boilerplate compilation stuff at bottom
-;Declare props like path: so we don't have to 'path:
-
-;Code has the power to make things that are pretty bad, that work just fine
-
-(add-import
-  @js{
-  require('codemirror/mode/scheme/scheme');
-  })
-(add-import
-  @js{import {UnControlled as CodeMirror} from 'react-codemirror2' }
-  )
-(define-component ScriptEditor
-		  @(useState 'value @js{props.script.script})
-		  @js{
-		  return <div>
-
-		  <CodeMirror
-		  value='(define x 2)'
-		  options={{
-		  mode: 'scheme',
-		  theme: 'material',
-		  lineNumbers: true
-		  }}
-		  onChange={(editor, data, value) => {
-		    window.server_call("http://localhost:8081",
-				       props.script.editScript.function,
-				       {script: value,
-				       isPrivate: true},
-				       (r)=>{
-				       setValue(r.script)
-				       }) 
-
-		  }}
-		  />
-
-		  </div>
-		  })
+;Factor out more here
 
 (define-component DomainSpecificUI
 		  @js{
                   const display = (thing)=>{
 		    if(thing.type=="script") {
-                      return @(ScriptEditor 'script: @~{thing})
+                      return @(CodeEditor 'script: @~{thing})
 		    } else {
                       return "Unknown Type: " + thing.type
 		    }
@@ -186,10 +135,7 @@
 			: ""
 			}}
 
-
-
-			;JSX lingers.  Can't ref ObjectExplorer component here
-			@~{result ? <ObjectExplorer object={result}/> : "" }
+			@js{{result ? @(ObjectExplorer 'object: @~{result}) : "" }}
 
 			))
 		   : @(Chip 'color: "secondary" 'label: @~{"Not a function: "+ JSON.stringify(props.wrapper)}) 
@@ -262,16 +208,7 @@
 		      (ContinuationViewer 'path: "/top")
 		      )))
 
-(define components
-  (list ScriptEditor-component DomainSpecificUI-component BasicBooleanEditor-component BasicStringEditor-component FunctionViewer-component ObjectExplorer-component ContinuationViewer-component App-component))
-
 (displayln (compile-app components))
 
-(save-app #:to "my-spell-app/src/App.js" components)
-
-
-;(displayln @js{@(ObjectExplorer 'object: @~{response})})
-
-
-
+(save-app #:to "my-spell-app/src/App.js")
 

@@ -2,7 +2,8 @@
 
 (provide start-server)
 
-(require "../server.rkt" json)
+(require racket-react/server ;"../server.rkt" 
+	 json)
 
 ;  The client can decide what to call based on its own logic, and/or the meta-data associated with the continuations...
 
