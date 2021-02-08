@@ -4,13 +4,12 @@ React components bound to server-side continuations
 
 # TODOS
 
-;Tool to start a new project.
-
 ;Clean up
 ;  How to Factor out components into modules?
 ;    CodeMirror almost done
 ;      css
 ;      npm import
+;      use APIExplorer.  Figure out how to extend with domain specific logic (pass in a prop...)
 
 ;Start personal component library!  Spellbook
   * ffmpeg
@@ -26,6 +25,8 @@ React components bound to server-side continuations
 ;Figure out how to serve react frontend from racket-react/server
 
 ;Design cool JSON API based on continuations
+  * Maybe make the tree-based viewer into one where following a function call replaces the current explorer with the result... (maybe with back buffer...)
+
 
 ;Try server-side rendering of components!  React.hydrate()???
 

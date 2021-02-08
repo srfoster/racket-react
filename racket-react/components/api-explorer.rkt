@@ -43,7 +43,10 @@
 				       props.wrapper.function,
 				       outgoingArgs,
 				       (r)=>{
-				       setResult(r)
+				       if(!props.onCall)
+				         setResult(r);
+				       else
+				         props.onCall(r);
 				       }) 
 		  }
 		  }
@@ -131,7 +134,7 @@
 		  @js{var displayResponse = (r)=>{
 		    if(r.type){
 		      if(r.type == "function"){
-		        return @(FunctionViewer 'wrapper: @~{r})
+		        return @(FunctionViewer 'wrapper: @~{r} 'onCall: @~{props.onApiCall})
 		      }
 		      if(r.type == "argument"){
 		        return "Arg"
@@ -188,7 +191,7 @@
 		    }
 		    })
 		  @js{
-		      return response ? @(ObjectExplorer 'object: @~{response}) : "waiting on response..." 
+		      return response ? @(ObjectExplorer 'object: @~{response} 'onApiCall: @~{setResponse}) : "waiting on response..." 
 		      }
 		  )
 

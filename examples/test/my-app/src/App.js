@@ -38,14 +38,14 @@ setLoaded(true)
 }
 })
 
-return response ? <ObjectExplorer object={response}></ObjectExplorer> : "waiting on response..."
+return response ? <ObjectExplorer object={response} onApiCall={setResponse}></ObjectExplorer> : "waiting on response..."
 }
 
 function ObjectExplorer (props){
   var displayResponse = (r)=>{
   if(r.type){
     if(r.type == "function"){
-      return <FunctionViewer wrapper={r}></FunctionViewer>
+      return <FunctionViewer wrapper={r} onCall={props.onApiCall}></FunctionViewer>
     }
     if(r.type == "argument"){
       return "Arg"
@@ -93,7 +93,10 @@ const call = ()=>{
                      props.wrapper.function,
                      outgoingArgs,
                      (r)=>{
-                     setResult(r)
+                     if(!props.onCall)
+                       setResult(r);
+                     else
+                       props.onCall(r);
                      })
 }
 
