@@ -6,3 +6,7 @@
 (define pkg-desc "Description Here")
 (define version "0.0")
 (define pkg-authors '(stephen))
+(define raco-commands
+  '(
+    ("react-new" (submod racket-react/raco-tools/new main) "" 100)
+    ))

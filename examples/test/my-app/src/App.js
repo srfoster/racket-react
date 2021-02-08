@@ -7,9 +7,6 @@ import * as I from '@material-ui/icons';
 
 import {UnControlled as CodeMirror} from 'react-codemirror2' 
 
-import { Impress, Step } from 'react-impressjs';
-import 'react-impressjs/styles/react-impressjs.css';
-
 require('codemirror/mode/scheme/scheme');
 
 window.server_call = (host,server_function,data,cb) =>{
@@ -21,10 +18,10 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 
 
 function App (props){
-  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
+  return <Mui.Container><APIExplorer path="/top"></APIExplorer></Mui.Container>
 }
 
-function ContinuationViewer (props){
+function APIExplorer (props){
   var [loaded, setLoaded] = useState(false)
 
 var [response, setResponse] = useState({})
@@ -53,7 +50,7 @@ function ObjectExplorer (props){
     if(r.type == "argument"){
       return "Arg"
     }
-    return <DomainSpecificUI wrapper={r}></DomainSpecificUI>
+    return "Domain Specific UI..."
   }
 
   if(typeof(r) == "object"){
@@ -67,6 +64,10 @@ function ObjectExplorer (props){
   }
 
   if(typeof(r) == "boolean"){
+    return ""+r
+  }
+
+  if(typeof(r) == "number"){
     return ""+r
   }
 
@@ -136,18 +137,6 @@ function BasicStringEditor (props){
   var [value, setValue] = useState(props.value)
 
 return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
-}
-
-function DomainSpecificUI (props){
-  const display = (thing)=>{
-  if(thing.type=="script") {
-    return <CodeEditor script={thing}></CodeEditor>
-  } else {
-    return "Unknown Type: " + thing.type
-  }
-}
-
-return display(props.wrapper)
 }
 
 function CodeEditor (props){

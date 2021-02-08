@@ -2,6 +2,7 @@
 
 (provide
   define-component
+  define-foreign-component
   component
   compile-app
   save-app

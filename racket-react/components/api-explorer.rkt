@@ -1,25 +1,10 @@
 #lang at-exp racket
 
+(provide APIExplorer)
+
 (require racket-react/client
 	 racket-react/components/code-editor
 	 racket-react/components/impress)
-
-;Factor out more here
-
-(define-component DomainSpecificUI
-		  @js{
-                  const display = (thing)=>{
-		    if(thing.type=="script") {
-                      return @(CodeEditor 'script: @~{thing})
-		    } else {
-                      return "Unknown Type: " + thing.type
-		    }
-		  }
-		  }
-		  @js{
-		  return display(props.wrapper) 
-		  })
-
 
 
 (define-component BasicStringEditor
@@ -151,7 +136,7 @@
 		      if(r.type == "argument"){
 		        return "Arg"
 		      }
-		      return @(DomainSpecificUI 'wrapper: @~{r})
+		      return "Domain Specific UI..."
 		    }
 
 		    if(typeof(r) == "object"){
@@ -170,6 +155,10 @@
 		    }
 
 		    if(typeof(r) == "boolean"){
+		      return ""+r 
+		    }
+
+		    if(typeof(r) == "number"){
 		      return ""+r 
 		    }
 
@@ -202,30 +191,4 @@
 		      return response ? @(ObjectExplorer 'object: @~{response}) : "waiting on response..." 
 		      }
 		  )
-
-
-(add-import @js{
-	    import { Impress, Step } from 'react-impressjs';
-	    import 'react-impressjs/styles/react-impressjs.css';
-	    })
-(define-component App
-		  (return
-		    (Container 
-
-		      (APIExplorer 'path: "/top")
-
-		      ;For a good time...
-		      #;
-		      (Impress 
-			'progress: @~{true}
-			(Step 'id: @~{'hi'} 'data: @~{{x: -10000, y: -10000}}
-			      "Are you ready?")
-			@(Step 'duration: @~{1500}
-			       (h1 "Here's the API explorer")
-			       (ContinuationViewer 'path: "/top")))
-		      )))
-
-(displayln (compile-app components))
-
-(save-app #:to "my-spell-app/src/App.js")
 

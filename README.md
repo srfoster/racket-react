@@ -4,6 +4,8 @@ React components bound to server-side continuations
 
 # TODOS
 
+;Tool to start a new project.
+
 ;Clean up
 ;  How to Factor out components into modules?
 ;    CodeMirror almost done
@@ -27,7 +29,6 @@ React components bound to server-side continuations
 
 ;Try server-side rendering of components!  React.hydrate()???
 
-;Docs: How to start a new project.
 
 # Example apps
 
