@@ -1,6 +1,7 @@
 #lang at-exp racket
 
-(provide APIExplorer)
+(provide APIExplorer
+	 ObjectExplorer)
 
 (require racket-react/client
 	 racket-react/components/code-editor
@@ -124,7 +125,7 @@
 			: ""
 			}}
 
-			@js{{result ? @(ObjectExplorer 'object: @~{result}) : "" }}
+			@js{{result ? @(ObjectExplorer 'object: @~{result} 'domainSpecific: @~{props.domainSpecific}) : "" }}
 
 			))
 		   : @(Chip 'color: "secondary" 'label: @~{"Not a function: "+ JSON.stringify(props.wrapper)}) 
@@ -134,12 +135,16 @@
 		  @js{var displayResponse = (r)=>{
 		    if(r.type){
 		      if(r.type == "function"){
-		        return @(FunctionViewer 'wrapper: @~{r} 'onCall: @~{props.onApiCall})
+		        return @(FunctionViewer 'wrapper: @~{r} 'onCall: @~{props.onApiCall}
+						'domainSpecific @~{props.domainSpecific}
+						)
 		      }
 		      if(r.type == "argument"){
 		        return "Arg"
 		      }
-		      return "Domain Specific UI..."
+		      let DS = props.domainSpecific
+		      console.log(DS)
+		      if(DS) return <DS wrapper={r} />
 		    }
 
 		    if(typeof(r) == "object"){
@@ -191,7 +196,10 @@
 		    }
 		    })
 		  @js{
-		      return response ? @(ObjectExplorer 'object: @~{response} 'onApiCall: @~{setResponse}) : "waiting on response..." 
+		      return response ? @(ObjectExplorer 
+					   'object: @~{response} 
+					   'onApiCall: @~{setResponse}
+					   'domainSpecific: @~{props.domainSpecific}) : "waiting on response..." 
 		      }
 		  )
 

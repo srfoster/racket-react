@@ -4,12 +4,10 @@ React components bound to server-side continuations
 
 # TODOS
 
-;Clean up
-;  How to Factor out components into modules?
-;    CodeMirror almost done
-;      css
-;      npm import
-;      use APIExplorer.  Figure out how to extend with domain specific logic (pass in a prop...)
+Clean up
+  How to Factor out components into modules?
+    CodeMirror almost done
+      npm import
 
 ;Start personal component library!  Spellbook
   * ffmpeg

@@ -4,13 +4,26 @@
 
 (require racket-react/client)
 
+
+
 (define-component CodeEditor
+		  (add-css!
+		    @js{
+		    @"@"import 'codemirror/lib/codemirror.css';
+		    @"@"import 'codemirror/theme/material.css';
+		    })
+
 		  (add-post-import
 		    @js{
 		    require('codemirror/mode/scheme/scheme');
 		    })
+
 		  (add-import
 		    @js{import {UnControlled as CodeMirror} from 'react-codemirror2' })
+
+		  (add-dependency! "react-codemirror2")
+		  (add-dependency! "codemirror")
+
 		  @(useState 'value @js{props.script.script})
 		  @js{
 		  return <div>

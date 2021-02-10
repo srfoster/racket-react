@@ -13,10 +13,14 @@
   class: 
   useEffect
   useState
-  add-import
-  add-post-import
   components
   add-component!
+  add-css!
+  add-dependency!
+  add-import
+  add-post-import
+  (rename-out [add-import add-import!]
+	      [add-post-import add-post-import!])
   (all-from-out website))
 
 (require website
@@ -32,6 +36,15 @@
 (define components '())
 (define (add-component! c)
   (set! components (cons c components)))
+
+(define csss '())
+(define (add-css! css)
+  (set! csss (cons css csss)))
+
+;Not used yet.  Should drive npm installs
+(define deps '())
+(define (add-dependency! dep)
+  (set! deps (cons dep deps)))
 
 (define-syntax (define-foreign-component stx)
   (syntax-parse 
@@ -133,9 +146,14 @@
 		     )))
   
 
-(define (save-app #:to file)
+(define (save-app)
   (with-output-to-file 
-    file
+    (build-path "my-app" "src" "App.css")
+    #:exists 'replace
+    (thunk
+      (map displayln csss)))
+  (with-output-to-file 
+    (build-path "my-app" "src" "App.js")
     #:exists 'replace
     (thunk
       (displayln

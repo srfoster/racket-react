@@ -7,8 +7,7 @@ import * as I from '@material-ui/icons';
 
 import {UnControlled as CodeMirror} from 'react-codemirror2' 
 
-import { Impress, Step } from 'react-impressjs';
-import 'react-impressjs/styles/react-impressjs.css';
+import CytoscapeComponent from 'react-cytoscapejs';
 
 require('codemirror/mode/scheme/scheme');
 
@@ -21,10 +20,26 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 
 
 function App (props){
-  return <Mui.Container><ContinuationViewer path="/top"></ContinuationViewer></Mui.Container>
+  return <Mui.Container><CytoscapeComponent style={ { width: '600px', height: '600px' } } elements={[ 
+   { data: { id: 'one', label: 'Node 1' }, position: { x: 300, y: 300 } }, 
+   { data: { id: 'two', label: 'Node 2' }, position: { x: 400, y: 300 } }, 
+   { data: { source: 'one', target: 'two', label: 'Edge from Node1 to Node2' } } 
+   ]}></CytoscapeComponent><APIExplorer path="/top" domainSpecific={DomainSpecificUI}></APIExplorer></Mui.Container>
 }
 
-function ContinuationViewer (props){
+function DomainSpecificUI (props){
+  const display = (thing)=>{
+  if(thing.type=="script") {
+    return <div><CodeEditor script={thing}></CodeEditor><ObjectExplorer object={thing}></ObjectExplorer></div>
+  } else {
+    return "Unknown Type: " + thing.type
+  }
+}
+
+return display(props.wrapper)
+}
+
+function APIExplorer (props){
   var [loaded, setLoaded] = useState(false)
 
 var [response, setResponse] = useState({})
@@ -41,19 +56,21 @@ setLoaded(true)
 }
 })
 
-return response ? <ObjectExplorer object={response}></ObjectExplorer> : "waiting on response..."
+return response ? <ObjectExplorer object={response} onApiCall={setResponse} domainSpecific={props.domainSpecific}></ObjectExplorer> : "waiting on response..."
 }
 
 function ObjectExplorer (props){
   var displayResponse = (r)=>{
   if(r.type){
     if(r.type == "function"){
-      return <FunctionViewer wrapper={r}></FunctionViewer>
+      return <FunctionViewer wrapper={r} onCall={props.onApiCall}>domainSpecific{props.domainSpecific}</FunctionViewer>
     }
     if(r.type == "argument"){
       return "Arg"
     }
-    return <DomainSpecificUI wrapper={r}></DomainSpecificUI>
+    let DS = props.domainSpecific
+    console.log(DS)
+    if(DS) return <DS wrapper={r} />
   }
 
   if(typeof(r) == "object"){
@@ -67,6 +84,10 @@ function ObjectExplorer (props){
   }
 
   if(typeof(r) == "boolean"){
+    return ""+r
+  }
+
+  if(typeof(r) == "number"){
     return ""+r
   }
 
@@ -92,7 +113,10 @@ const call = ()=>{
                      props.wrapper.function,
                      outgoingArgs,
                      (r)=>{
-                     setResult(r)
+                     if(!props.onCall)
+                       setResult(r);
+                     else
+                       props.onCall(r);
                      })
 }
 
@@ -122,7 +146,7 @@ props.wrapper.arguments ?
                  )}</Mui.TableCell></Mui.TableRow>
      )}</Mui.TableBody></Mui.TableContainer>
 : ""
-}{result ? <ObjectExplorer object={result}></ObjectExplorer> : "" }</Mui.CardContent></Mui.Card>
+}{result ? <ObjectExplorer object={result} domainSpecific={props.domainSpecific}></ObjectExplorer> : "" }</Mui.CardContent></Mui.Card>
 : <Mui.Chip color="secondary" label={"Not a function: "+ JSON.stringify(props.wrapper)}></Mui.Chip>
 }
 
@@ -136,18 +160,6 @@ function BasicStringEditor (props){
   var [value, setValue] = useState(props.value)
 
 return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
-}
-
-function DomainSpecificUI (props){
-  const display = (thing)=>{
-  if(thing.type=="script") {
-    return <CodeEditor script={thing}></CodeEditor>
-  } else {
-    return "Unknown Type: " + thing.type
-  }
-}
-
-return display(props.wrapper)
 }
 
 function CodeEditor (props){
