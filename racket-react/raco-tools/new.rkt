@@ -37,7 +37,7 @@
 				'type "function"
 				'name "welcome"
 				'userDescription "Keeps track of a counter"
-				'devDescription "Demonstrates serialized continutions.  See @dir/controllers.rkt"
+				'devDescription "Demonstrates serialized continutions.  See @|dir|/controllers.rkt"
 				'function (embed (curry welcome (add1 count))))))))
 
 	       (define-values (do-routing url)
@@ -81,13 +81,14 @@
 
 	 (displayln (compile-app components))
 
-	 (save-app #:to "my-app/src/App.js")
+	 (save-app)
 
 	 }
 
 	 (system (~a "cd " dir ";npx create-react-app my-app"))
 	 (system (~a "cd " dir "/my-app;npm install @material-ui/core"))
 	 (system (~a "cd " dir "/my-app;npm install @material-ui/icons"))
+	 #;
 	 (system (~a "cd " dir "/my-app;npm install react-codemirror2 codemirror"))
 
 	 (displayln "Run racket reloadable.rkt to run the server.  Run `cd my-app/; npm start`, then `racket views.rkt` when you make changes")

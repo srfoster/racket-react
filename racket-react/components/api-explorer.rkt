@@ -4,7 +4,6 @@
 	 ObjectExplorer)
 
 (require racket-react/client
-	 racket-react/components/code-editor
 	 racket-react/components/impress)
 
 

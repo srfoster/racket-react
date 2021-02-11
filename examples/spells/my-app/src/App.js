@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import * as Mui from '@material-ui/core';
 import * as I from '@material-ui/icons';
 
-import {UnControlled as CodeMirror} from 'react-codemirror2' 
-
 import CytoscapeComponent from 'react-cytoscapejs';
+
+import {UnControlled as CodeMirror} from 'react-codemirror2' 
 
 require('codemirror/mode/scheme/scheme');
 
@@ -30,7 +30,16 @@ function App (props){
 function DomainSpecificUI (props){
   const display = (thing)=>{
   if(thing.type=="script") {
-    return <div><CodeEditor script={thing}></CodeEditor><ObjectExplorer object={thing}></ObjectExplorer></div>
+    return <div><CodeEditor script={thing.script} onChange={(editor, data, value) => { 
+ console.log(thing) 
+ window.server_call("http://localhost:8081", 
+                     thing.editScript.function, 
+                     {script: value, 
+                     isPrivate: true}, 
+                     (r)=>{ 
+                     }) 
+ 
+ }}></CodeEditor><ObjectExplorer object={thing}></ObjectExplorer></div>
   } else {
     return "Unknown Type: " + thing.type
   }
@@ -168,22 +177,13 @@ function CodeEditor (props){
 return <div>
 
 <CodeMirror
-value='(define x 2)'
+value={props.script}
 options={{
 mode: 'scheme',
 theme: 'material',
 lineNumbers: true
 }}
-onChange={(editor, data, value) => {
-window.server_call("http://localhost:8081",
-                   props.script.editScript.function,
-                   {script: value,
-                   isPrivate: true},
-                   (r)=>{
-                   setValue(r.script)
-                   })
-
-}}
+onChange={props.onChange}
 />
 
 </div>

@@ -91,7 +91,24 @@
     }
   })
 
+(define (installed? dep)
+  ;Buggy.  Should parse the JSON.
+  (regexp-match
+    dep
+    (file->string "my-app/package.json")
+    ))
+
+(define (install-deps)
+  (define to-install
+    (filter (not/c installed?)
+	    deps))
+  
+  (when (not (empty? to-install))
+    (system @~a{cd my-app; npm i @(string-join to-install " ")})))
+
 (define (compile-app components)
+  (install-deps)
+
   (define pass1
   @js{
   import logo from './logo.svg';

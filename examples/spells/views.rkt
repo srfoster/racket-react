@@ -13,7 +13,20 @@
                   const display = (thing)=>{
 		    if(thing.type=="script") {
                       return @(div
-				(CodeEditor 'script: @~{thing})
+				(CodeEditor 'script: @~{thing.script}
+
+					    'onChange:
+
+					    @~{(editor, data, value) => {
+					    console.log(thing)
+					    window.server_call("http://localhost:8081",
+							       thing.editScript.function,
+							       {script: value,
+							       isPrivate: true},
+							       (r)=>{
+							       }) 
+
+					    }})
 				(ObjectExplorer 'object: @~{thing}))
 		    } else {
                       return "Unknown Type: " + thing.type
