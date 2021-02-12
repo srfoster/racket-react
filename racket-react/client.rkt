@@ -17,8 +17,9 @@
   add-component!
   add-css!
   add-dependency!
-  add-import
-  add-post-import
+  add-for-server-calls!
+  add-import ;Deprecated
+  add-post-import ;Deprecated
   (rename-out [add-import add-import!]
 	      [add-post-import add-post-import!])
   (all-from-out website))
@@ -32,6 +33,10 @@
 (define class: 'className:)
 
 (struct component (name body))
+
+(define server-calls '())
+(define (add-for-server-calls! c)
+  (set! server-calls (cons c server-calls)))
 
 (define components '())
 (define (add-component! c)
@@ -127,7 +132,7 @@
      "\n\n")
 
   window.server_call = (host,server_function,data,cb) =>{
-  fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
+  fetch(host + server_function + "?data=" + encodeURI(JSON.stringify({...data @(string-join (map (lambda (s) @~a{,...@s}) server-calls) " ")}))).then((r)=>r.json())
   .then((r)=>{
 	cb(r)
 	})

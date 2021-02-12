@@ -10,7 +10,7 @@ import * as I from '@material-ui/icons';
 
 
 window.server_call = (host,server_function,data,cb) =>{
-fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
+fetch(host + server_function + "?data=" + encodeURI(JSON.stringify({...data ,...{authToken: window.localStorage.getItem("authToken")}}))).then((r)=>r.json())
 .then((r)=>{
       cb(r)
       })
@@ -18,7 +18,71 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 
 
 function App (props){
-  return <Mui.Container><APIExplorer path="/top"></APIExplorer></Mui.Container>
+  return <Mui.Container><LoginForm path="/welcome"></LoginForm></Mui.Container>
+}
+
+function LoginForm (props){
+  var [loaded, setLoaded] = useState(false)
+
+var [response, setResponse] = useState({})
+
+useEffect(()=>{
+ if(!loaded){
+window.server_call("http://localhost:8081",
+                   props.path,
+                   {},
+                   (r)=>{
+                   setResponse(r)
+                   })
+setLoaded(true)
+}
+})
+
+return <Mui.Paper style={{padding: 10, margin: 10}}>Login...<LoginResponseViewer response={response} onNextResponse={setResponse}></LoginResponseViewer></Mui.Paper>
+}
+
+function LoginResponseViewer (props){
+  let thing = <ObjectExplorer object={props.response} />
+
+if(props.response.type == "error")
+  thing = <ErrorResponse response={props.response}
+                         onNextResponse={props.onNextResponse} />
+
+if(props.response.type == "success")
+  thing = <SuccessResponse response={props.response}
+                           onNextResponse={props.onNextResponse} />
+
+return thing
+}
+
+function ErrorResponse (props){
+  var [username, setUsername] = useState()
+
+var [password, setPassword] = useState()
+
+return <div><p>{props.response.message}</p><div><Mui.TextField label="username" onChange={(e)=>setUsername(e.target.value)}></Mui.TextField></div><div><Mui.TextField label="password" onChange={(e)=>setPassword(e.target.value)}></Mui.TextField></div><br /><Mui.Button variant="contained" color="secondary" onClick={()=>{window.server_call( 
+                         "http://localhost:8081", 
+                         props.response.login.function, 
+                         {username: username, 
+                         password: password}, 
+                         (r)=>{ 
+                         props.onNextResponse(r) 
+                         })}}>Submit</Mui.Button></div>
+}
+
+function SuccessResponse (props){
+  useEffect(()=>{
+ window.server_call(
+                   "http://localhost:8081",
+                   props.response.continue.function,
+                   {},
+                   (r)=>{
+                   props.onNextResponse(r)
+                   })
+
+})
+
+return <div>One moment...</div>
 }
 
 function APIExplorer (props){

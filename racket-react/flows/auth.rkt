@@ -5,6 +5,7 @@
 (require racket-react/server)
 
 (define (is-logged-in?)
+  (displayln (arg 'authToken))
   #f)
 
 (define (require-login then)
@@ -19,9 +20,15 @@
 		     (embed (curry login then))) 
 	    )))))
 
+
+(define dummy-creds (hash "user" "asdfasdf"))
 (define (creds-correct username password)
-  #f
-  )
+  (and
+    (hash-has-key? dummy-creds username)
+    (string=? (hash-ref dummy-creds username) password)))
+
+(define (jwt-for username)
+  "ABCD")
 
 (define (login then)
   (define username (arg 'username))
@@ -31,7 +38,14 @@
   ; TODO: Issue JWT
 
   (if (creds-correct username password)
-      (then)
+      (with-embeds
+	(response/json/cors 
+	  (hash 
+	    'type "success"
+	    'message "You logged in"
+	    'authToken (jwt-for username)
+	    'continue (continue-function-object (embed then))
+	    )))
       (with-embeds
 	(response/json/cors 
 	  (hash 
@@ -54,6 +68,14 @@
     'userDescription "Logs you in"
     'devDescription "Checks the provided username and password against server-side credentials"
     'function login-function))
+
+(define (continue-function-object continue-function)
+  (hash
+    'type "function"
+    'name "???"
+    'userDescription "Now that you're logged in, you can do this."
+    'devDescription "Allows the user to continue with whatever they were requesting prior to being logged in"
+    'function continue-function))
 
 (define (signup)
   (with-embeds

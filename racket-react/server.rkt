@@ -79,7 +79,7 @@
   j)
 
 (define (arg key)
-  (hash-ref (current-request-args) key))
+  (hash-ref (current-request-args) key #f))
 
 
 (define (start do-routing)

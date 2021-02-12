@@ -1,12 +1,20 @@
 #lang at-exp racket
 
 (require racket-react/client
-	 racket-react/components/api-explorer)
+	 racket-react/components/api-explorer
+	 racket-react/components/auth
+	 )
 
 (define-component App
 		  (return
 		    (Container 
-		      (APIExplorer 'path: "/top"))))
+		      (LoginForm 'path: "/welcome"
+
+				 ;afterLogin: ApiExplorer...
+				 )
+
+		      #;
+		      (APIExplorer 'path: "/welcome"))))
 
 (displayln (compile-app components))
 

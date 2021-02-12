@@ -22,9 +22,10 @@
 
 (define-values (do-routing url)
   (dispatch-rules
-    [("top")
+    [("welcome")
      (lambda (r) 
        (require-login welcome))]
+
     #;
     [("login")
      (lambda (r) 
