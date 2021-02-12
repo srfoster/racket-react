@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import * as Mui from '@material-ui/core';
 import * as I from '@material-ui/icons';
 
-import {UnControlled as CodeMirror} from 'react-codemirror2' 
 
-require('codemirror/mode/scheme/scheme');
+
+
 
 window.server_call = (host,server_function,data,cb) =>{
 fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
@@ -38,19 +38,21 @@ setLoaded(true)
 }
 })
 
-return response ? <ObjectExplorer object={response} onApiCall={setResponse}></ObjectExplorer> : "waiting on response..."
+return response ? <ObjectExplorer object={response} onApiCall={setResponse} domainSpecific={props.domainSpecific}></ObjectExplorer> : "waiting on response..."
 }
 
 function ObjectExplorer (props){
   var displayResponse = (r)=>{
   if(r.type){
     if(r.type == "function"){
-      return <FunctionViewer wrapper={r} onCall={props.onApiCall}></FunctionViewer>
+      return <FunctionViewer wrapper={r} onCall={props.onApiCall}>domainSpecific{props.domainSpecific}</FunctionViewer>
     }
     if(r.type == "argument"){
       return "Arg"
     }
-    return "Domain Specific UI..."
+    let DS = props.domainSpecific
+    console.log(DS)
+    if(DS) return <DS wrapper={r} />
   }
 
   if(typeof(r) == "object"){
@@ -126,7 +128,7 @@ props.wrapper.arguments ?
                  )}</Mui.TableCell></Mui.TableRow>
      )}</Mui.TableBody></Mui.TableContainer>
 : ""
-}{result ? <ObjectExplorer object={result}></ObjectExplorer> : "" }</Mui.CardContent></Mui.Card>
+}{result ? <ObjectExplorer object={result} domainSpecific={props.domainSpecific}></ObjectExplorer> : "" }</Mui.CardContent></Mui.Card>
 : <Mui.Chip color="secondary" label={"Not a function: "+ JSON.stringify(props.wrapper)}></Mui.Chip>
 }
 
@@ -140,33 +142,6 @@ function BasicStringEditor (props){
   var [value, setValue] = useState(props.value)
 
 return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
-}
-
-function CodeEditor (props){
-  var [value, setValue] = useState(props.script.script)
-
-return <div>
-
-<CodeMirror
-value='(define x 2)'
-options={{
-mode: 'scheme',
-theme: 'material',
-lineNumbers: true
-}}
-onChange={(editor, data, value) => {
-window.server_call("http://localhost:8081",
-                   props.script.editScript.function,
-                   {script: value,
-                   isPrivate: true},
-                   (r)=>{
-                   setValue(r.script)
-                   })
-
-}}
-/>
-
-</div>
 }
 
 export default App;

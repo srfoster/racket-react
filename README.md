@@ -30,11 +30,29 @@ Example `project-name/views.rkt`:
 
 # Handy packages
 
-TODO: figure this out
+## Authentication
+
+On the server:
 
 ```
-racket-react/auth
+(require racket-react/flows/auth)
+
+(dispatch-rules
+    [("protected-endpoint")
+     (lambda (r) 
+       (require-login my-protected-function))])
+
 ```
+
+On the client: 
+
+```
+(require racket-react/components/auth)
+
+???
+
+```
+
 
 ```
 racket-react/file-editor
@@ -47,12 +65,19 @@ racket-react/postgres
 
 # TODOS
 
-Clean up
-  How to Factor out components into modules?
-    CodeMirror almost done
-      npm import
+;Wishlist /  Spellbook
 
-;Start personal component library!  Spellbook
+  * Authentication components (views) and server-side flows that go with them
+  * Code editor component and server-side flows for: saving editable fields to a db, saving to a file
+    - Eval Racket code...
+
+  * Combine client and server for deployment.  Serve react from a server endpoint.
+  * Tie in with website/website-js.  Static apps with react embedded (inject with website-js??).
+
+  * File browser component?
+  * Component editor (with server-side rendering flow / send back to client and inject in page?)
+
+
   * ffmpeg
   * vim wasm
   * cytoscape

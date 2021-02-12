@@ -3,6 +3,7 @@
 (provide start-server)
 
 (require racket-react/server 
+	 racket-react/flows/auth
 	 json)
 
 (define (welcome [count 0])
@@ -16,13 +17,24 @@
 		 'name "welcome"
 		 'userDescription "Keeps track of a counter"
 		 'devDescription "Demonstrates serialized continutions.  See @dir/controllers.rkt"
-		 'function (embed (curry welcome (add1 count))))))))
+		 'function (embed (curry welcome (add1 count)))
+		 )))))
 
 (define-values (do-routing url)
   (dispatch-rules
     [("top")
      (lambda (r) 
-       (welcome))]))
+       (require-login welcome))]
+    #;
+    [("login")
+     (lambda (r) 
+       (login))]
+
+    #;
+    [("signup")
+     (lambda (r) 
+       (signup))]
+    ))
 
 (define (start-server)
   (serve/servlet (start do-routing)

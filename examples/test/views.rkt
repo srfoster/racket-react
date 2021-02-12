@@ -10,4 +10,4 @@
 
 (displayln (compile-app components))
 
-(save-app #:to "my-app/src/App.js")
+(save-app)
