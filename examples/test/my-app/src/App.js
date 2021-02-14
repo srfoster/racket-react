@@ -18,11 +18,13 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify({...data ,...
 
 
 function App (props){
-  return <Mui.Container><LoginForm path="/welcome"></LoginForm></Mui.Container>
+  return <Mui.Container><LogoutButton></LogoutButton><LoginForm path="/welcome" afterLogin={(response)=><APIExplorer path="/welcome"/>}></LoginForm></Mui.Container>
 }
 
 function LoginForm (props){
   var [loaded, setLoaded] = useState(false)
+
+var [loggedIn, setLoggedIn] = useState(false)
 
 var [response, setResponse] = useState({})
 
@@ -38,19 +40,24 @@ setLoaded(true)
 }
 })
 
-return <Mui.Paper style={{padding: 10, margin: 10}}>Login...<LoginResponseViewer response={response} onNextResponse={setResponse}></LoginResponseViewer></Mui.Paper>
+return localStorage.getItem("authToken") ? props.afterLogin(response) :
+<Mui.Paper style={{padding: 10, margin: 10}}><LoginResponseViewer response={response} afterLogin={(response)=>{ 
+ setLoggedIn(true); 
+ setResponse(response) 
+ }} onNextResponse={setResponse}></LoginResponseViewer></Mui.Paper>
 }
 
 function LoginResponseViewer (props){
-  let thing = <ObjectExplorer object={props.response} />
+  let thing = <span>LoginResponseViewer: error.  Report this as a bug.</span>
 
 if(props.response.type == "error")
   thing = <ErrorResponse response={props.response}
                          onNextResponse={props.onNextResponse} />
 
-if(props.response.type == "success")
+if(props.response.type == "success"){
   thing = <SuccessResponse response={props.response}
-                           onNextResponse={props.onNextResponse} />
+                           afterLogin={props.afterLogin} />
+                           }
 
 return thing
 }
@@ -72,17 +79,24 @@ return <div><p>{props.response.message}</p><div><Mui.TextField label="username" 
 
 function SuccessResponse (props){
   useEffect(()=>{
- window.server_call(
+ window.localStorage.setItem("authToken", props.response.authToken)
+window.server_call(
                    "http://localhost:8081",
                    props.response.continue.function,
                    {},
                    (r)=>{
-                   props.onNextResponse(r)
+                   props.afterLogin(r)
                    })
 
 })
 
 return <div>One moment...</div>
+}
+
+function LogoutButton (props){
+  return <Mui.Button variant="contained" color="secondary" onClick={()=>{ 
+ localStorage.removeItem("authToken") 
+ }}>Logout</Mui.Button>
 }
 
 function APIExplorer (props){
@@ -115,7 +129,6 @@ function ObjectExplorer (props){
       return "Arg"
     }
     let DS = props.domainSpecific
-    console.log(DS)
     if(DS) return <DS wrapper={r} />
   }
 
@@ -184,7 +197,6 @@ props.wrapper.arguments ?
      Object.keys(props.wrapper.arguments).map((arg)=>
      <Mui.TableRow><Mui.TableCell><Mui.Chip label={arg}></Mui.Chip></Mui.TableCell><Mui.TableCell>{editorForType(props.wrapper.arguments[arg], 
                  (s)=>{ 
-                 console.log(s) 
                  var newArgs = {...outgoingArgs} 
                  newArgs[arg] = s 
                  setOutgoingArgs(newArgs); 

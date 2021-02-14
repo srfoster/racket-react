@@ -44,14 +44,27 @@ On the server:
 
 ```
 
+The given endpoint is now protected and will (until there is a successful login) respond with payloads that can be handled by the `LoginForm` in `racket-react/compnents/auth`
+
 On the client: 
 
 ```
 (require racket-react/components/auth)
 
-???
+(define-component App
+		  (return
+		    (Container 
+		      (LoginForm 'path: "/welcome"
+
+				 'afterLogin: @~{(props)=><APIExplorer path="/welcome"/>})
+				 ) 
+		      )))
 
 ```
+
+Pass in to `LoginForm`'s `afterLogin:` prop whatever component you want to be viewed after the login flow successfully completes (the user logs in).
+
+
 
 
 ```
@@ -65,9 +78,14 @@ racket-react/postgres
 
 # TODOS
 
+Authentication components (views) and server-side flows that go with them
+
+* Use actual bcrypt library for JWT token gen/checking
+* ~~Make client-side component send localStorage'd JWT token in request.  Show afterLogin if logged in...~~
+* ~~Make server-side send actual JWT~~
+
 ;Wishlist /  Spellbook
 
-  * Authentication components (views) and server-side flows that go with them
   * Code editor component and server-side flows for: saving editable fields to a db, saving to a file
     - Eval Racket code...
 

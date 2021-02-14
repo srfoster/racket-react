@@ -1,6 +1,7 @@
 #lang at-exp racket
 
-(provide LoginForm)
+(provide LoginForm
+	 LogoutButton)
 
 (require racket-react/client)
 
@@ -10,15 +11,26 @@
    {authToken: window.localStorage.getItem("authToken")} 
   })
 
+(define-component LogoutButton
+		  (return
+		    (Button 
+		      'variant: "contained" 
+		      'color: "secondary"
+		      'onClick: @~{()=>{
+		      localStorage.removeItem("authToken")
+		      }}
+		      "Logout")))
+
 (define-component SuccessResponse
 		  (useEffect
 		    @js{
+		        window.localStorage.setItem("authToken", props.response.authToken)
 			window.server_call(
 					   "http://localhost:8081",
 					   props.response.continue.function,
 					   {},
 					   (r)=>{
-					   props.onNextResponse(r)
+					   props.afterLogin(r)
 					   })
 
 		    })
@@ -58,22 +70,24 @@
 
 (define-component LoginResponseViewer
 		  @js{
-		      let thing = <ObjectExplorer object={props.response} />
+		      let thing = <span>LoginResponseViewer: error.  Report this as a bug.</span> 
 
                       if(props.response.type == "error")
 		        thing = <ErrorResponse response={props.response} 
 			                       onNextResponse={props.onNextResponse} />
 
-                      if(props.response.type == "success")
-		        thing = <SuccessResponse response={props.response} 
-			                         onNextResponse={props.onNextResponse} />
+                      if(props.response.type == "success"){
+		        thing = <SuccessResponse response={props.response}
+			                         afterLogin={props.afterLogin} />
+						 }
 		    
 		      return thing
 		   })
 
 (define-component LoginForm
-		  @js{var [loaded, setLoaded] = useState(false)} ;Can we macroify??
-		  @js{var [response, setResponse] = useState({})} ;Can we macroify??
+		  @js{var [loaded, setLoaded] = useState(false)} 
+		  @js{var [loggedIn, setLoggedIn] = useState(false)} 
+		  @js{var [response, setResponse] = useState({})} 
 
 		  (useEffect
 		    @js{
@@ -85,11 +99,21 @@
 				       setResponse(r)
 				       }) 
 		    setLoaded(true)
-		    }
-		    })
+		    }})
 
 		  (return
-		    (Paper 'style: @~{{padding: 10, margin: 10}}
-		      "Login..."
-		      (LoginResponseViewer 'response: @~{response}
-					   'onNextResponse: @~{setResponse}))))
+		    @js{
+		    localStorage.getItem("authToken") ? props.afterLogin(response) :
+		    @(Paper 'style: @~{{padding: 10, margin: 10}}
+			    (LoginResponseViewer 'response: @~{response}
+						 'afterLogin: @~{(response)=>{
+						 setLoggedIn(true);
+						 setResponse(response)
+						 }}
+						 'onNextResponse: @~{setResponse})
+
+			    )
+		    }))
+
+
+

@@ -8,13 +8,12 @@
 (define-component App
 		  (return
 		    (Container 
+		      (LogoutButton)
 		      (LoginForm 'path: "/welcome"
-
-				 ;afterLogin: ApiExplorer...
-				 )
-
-		      #;
-		      (APIExplorer 'path: "/welcome"))))
+				 'afterLogin: 
+				 @~{(response)=><APIExplorer path="/welcome"/>}
+				 ;@~{(response)=><span>In!</span>}
+				 ))))
 
 (displayln (compile-app components))
 

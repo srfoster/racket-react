@@ -112,7 +112,6 @@
 				 @(TableCell
 				   @~{editorForType(props.wrapper.arguments[arg],
 						     (s)=>{
-						     console.log(s)
 						     var newArgs = {...outgoingArgs}
 						     newArgs[arg] = s
 						     setOutgoingArgs(newArgs);
@@ -142,7 +141,6 @@
 		        return "Arg"
 		      }
 		      let DS = props.domainSpecific
-		      console.log(DS)
 		      if(DS) return <DS wrapper={r} />
 		    }
 

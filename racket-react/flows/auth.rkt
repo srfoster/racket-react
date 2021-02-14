@@ -5,8 +5,11 @@
 (require racket-react/server)
 
 (define (is-logged-in?)
-  (displayln (arg 'authToken))
-  #f)
+  (define auth-token (arg 'authToken))
+  (and (string=? "ABCD" (~a auth-token))))
+
+(define (jwt-for username)
+  "ABCD")
 
 (define (require-login then)
   (if (is-logged-in?)
@@ -27,8 +30,6 @@
     (hash-has-key? dummy-creds username)
     (string=? (hash-ref dummy-creds username) password)))
 
-(define (jwt-for username)
-  "ABCD")
 
 (define (login then)
   (define username (arg 'username))
