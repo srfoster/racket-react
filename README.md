@@ -84,7 +84,10 @@ Authentication components (views) and server-side flows that go with them
 * ~~Make client-side component send localStorage'd JWT token in request.  Show afterLogin if logged in...~~
 * ~~Make server-side send actual JWT~~
 
+
 ;Wishlist /  Spellbook
+  * Component editor (with server-side rendering flow / send back to client and inject in page?)
+    - have started on this in `examples/website-integration`.  
 
   * Code editor component and server-side flows for: saving editable fields to a db, saving to a file
     - Eval Racket code...
@@ -93,7 +96,6 @@ Authentication components (views) and server-side flows that go with them
   * Tie in with website/website-js.  Static apps with react embedded (inject with website-js??).
 
   * File browser component?
-  * Component editor (with server-side rendering flow / send back to client and inject in page?)
 
 
   * ffmpeg
