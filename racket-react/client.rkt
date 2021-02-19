@@ -1,4 +1,4 @@
-#lang at-exp racket
+#lang at-exp web-server
 
 (provide
   define-component
@@ -118,6 +118,8 @@
   @js{
   import logo from './logo.svg';
   import './App.css';
+  import * as babel from '@"@"babel/standalone';
+  import ReactDOM from 'react-dom';
   import React, { useState, useEffect } from 'react';
 
   import * as Mui from '@"@"material-ui/core';
@@ -130,6 +132,11 @@
   @(string-join
      post-imports
      "\n\n")
+
+  //Supporting dynamic component eval
+  //window.babel = babel
+  window.React = React
+  window.useState = useState
 
   window.server_call = (host,server_function,data,cb) =>{
   fetch(host + server_function + "?data=" + encodeURI(JSON.stringify({...data @(string-join (map (lambda (s) @~a{,...@s}) server-calls) " ")}))).then((r)=>r.json())

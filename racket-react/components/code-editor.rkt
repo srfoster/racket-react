@@ -1,6 +1,7 @@
 #lang at-exp racket
 
-(provide CodeEditor)
+(provide CodeEditor
+	 CodeEditor-component)
 
 (require racket-react/client)
 

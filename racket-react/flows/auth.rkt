@@ -2,14 +2,20 @@
 
 (provide require-login login signup)
 
-(require racket-react/server)
+(require racket-react/server
+	 net/jwt)
 
 (define (is-logged-in?)
   (define auth-token (arg 'authToken))
-  (and (string=? "ABCD" (~a auth-token))))
+  (define decoded
+    (let ([decoded (decode-jwt (~a auth-token))])
+      (if decoded decoded #f)))
+  (and decoded
+       (verify-jwt decoded "HS256" "swordfish")))
 
 (define (jwt-for username)
-  "ABCD")
+  (encode/sign "HS256" "swordfish" ;Secret
+	       ))
 
 (define (require-login then)
   (if (is-logged-in?)
@@ -24,6 +30,7 @@
 	    )))))
 
 
+;Here's where we'd do bcrypt stuff...
 (define dummy-creds (hash "user" "asdfasdf"))
 (define (creds-correct username password)
   (and

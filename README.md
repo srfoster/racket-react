@@ -80,9 +80,9 @@ racket-react/postgres
 
 Authentication components (views) and server-side flows that go with them
 
-* Use actual bcrypt library for JWT token gen/checking
-* ~~Make client-side component send localStorage'd JWT token in request.  Show afterLogin if logged in...~~
-* ~~Make server-side send actual JWT~~
+* Use actual bcrypt library for hashing pwords
+* Do JWT token gen/checking (hide the secret).
+* Do better ui on the sign in page (password field, lol)
 
 
 ;Wishlist /  Spellbook
