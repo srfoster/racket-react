@@ -4,7 +4,9 @@
 	 racket-react/components/code-editor
 	 racket-react/components/impress
 	 racket-react/components/api-explorer
-	 racket-react/components/cytoscape)
+	 racket-react/components/cytoscape
+	 
+	 "./runes.rkt")
 
 ;Factor out more here
 
@@ -37,34 +39,39 @@
 		  return display(props.wrapper) 
 		  })
 
+(require racket-react/components/drag-and-drop)
 
 (define-component App
 		  (return
 		    (Container 
-		      (CytoscapeComponent 
-			'style: @~{ { width: '600px', height: '600px' } }
-			
-				      'elements: @~{
-				      [
-				       { data: { id: 'one', label: 'Node 1' }, position: { x: 300, y: 300 } },
-				       { data: { id: 'two', label: 'Node 2' }, position: { x: 400, y: 300 } },
-				       { data: { source: 'one', target: 'two', label: 'Edge from Node1 to Node2' } }
-				       ]
-				      } )
+		      (RuneSurface)
 
 		      (APIExplorer 'path: "/top"
 				   'domainSpecific: @~{DomainSpecificUI})
 
-		      ;For a good time...
-		      #;
-		      (Impress 
-			'progress: @~{true}
-			(Step 'id: @~{'hi'} 'data: @~{{x: -10000, y: -10000}}
-			      "Are you ready?")
-			@(Step 'duration: @~{1500}
-			       (h1 "Here's the API explorer")
-			       (ContinuationViewer 'path: "/top")))
-		      )))
+#;
+(CytoscapeComponent 
+  'style: @~{ { width: '600px', height: '600px' } }
+
+  'elements: @~{
+  [
+   { data: { id: 'one', label: 'Node 1' }, position: { x: 300, y: 300 } },
+   { data: { id: 'two', label: 'Node 2' }, position: { x: 400, y: 300 } },
+   { data: { source: 'one', target: 'two', label: 'Edge from Node1 to Node2' } }
+   ]
+  } )
+
+
+;For a good time...
+#;
+(Impress 
+  'progress: @~{true}
+  (Step 'id: @~{'hi'} 'data: @~{{x: -10000, y: -10000}}
+	"Are you ready?")
+  @(Step 'duration: @~{1500}
+	 (h1 "Here's the API explorer")
+	 (ContinuationViewer 'path: "/top")))
+)))
 
 (displayln (compile-app components))
 

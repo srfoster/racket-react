@@ -1,9 +1,13 @@
 import logo from './logo.svg';
 import './App.css';
+//import * as babel from '@babel/standalone';
+import ReactDOM from 'react-dom';
 import React, { useState, useEffect } from 'react';
 
 import * as Mui from '@material-ui/core';
 import * as I from '@material-ui/icons';
+
+ import Draggable from 'react-draggable' 
 
 import CytoscapeComponent from 'react-cytoscapejs';
 
@@ -11,8 +15,13 @@ import {UnControlled as CodeMirror} from 'react-codemirror2'
 
 require('codemirror/mode/scheme/scheme');
 
+//Supporting dynamic component eval
+//window.babel = babel
+window.React = React
+window.useState = useState
+
 window.server_call = (host,server_function,data,cb) =>{
-fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then((r)=>r.json())
+fetch(host + server_function + "?data=" + encodeURI(JSON.stringify({...data }))).then((r)=>r.json())
 .then((r)=>{
       cb(r)
       })
@@ -20,15 +29,11 @@ fetch(host + server_function + "?data=" + encodeURI(JSON.stringify(data))).then(
 
 
 function App (props){
-  return <Mui.Container><CytoscapeComponent style={ { width: '600px', height: '600px' } } elements={[ 
-   { data: { id: 'one', label: 'Node 1' }, position: { x: 300, y: 300 } }, 
-   { data: { id: 'two', label: 'Node 2' }, position: { x: 400, y: 300 } }, 
-   { data: { source: 'one', target: 'two', label: 'Edge from Node1 to Node2' } } 
-   ]}></CytoscapeComponent><APIExplorer path="/top" domainSpecific={DomainSpecificUI}></APIExplorer></Mui.Container>
+return <Mui.Container><RuneSurface></RuneSurface><APIExplorer path="/top" domainSpecific={DomainSpecificUI}></APIExplorer></Mui.Container>
 }
 
 function DomainSpecificUI (props){
-  const display = (thing)=>{
+const display = (thing)=>{
   if(thing.type=="script") {
     return <div><CodeEditor script={thing.script} onChange={(editor, data, value) => { 
  console.log(thing) 
@@ -48,13 +53,36 @@ function DomainSpecificUI (props){
 return display(props.wrapper)
 }
 
+function RuneSurface (props){
+var [draggables, setDraggables] = useState([
+
+ <Rune compile={(x,y,val)=>console.log(x,y,val)}>(</Rune>,
+
+ <Rune compile={(x,y,val)=>console.log(x,y,val)}>RUNE!</Rune>,
+
+ <Rune compile={(x,y,val)=>console.log(x,y,val)}>)</Rune>
+
+])
+
+
+return(
+       <div><button onClick={()=>{ 
+    setDraggables([...draggables,  <Draggable><div>new</div></Draggable>  ]) 
+ }}>Add Rune</button>{draggables}</div>
+       )
+}
+
+function Rune (props){
+return <Draggable onStop={(e,d)=>{console.log(e,d); props.compile(d.x,d.y,props.children)}}><div>{props.children}</div></Draggable>
+}
+
 function APIExplorer (props){
-  var [loaded, setLoaded] = useState(false)
+var [loaded, setLoaded] = useState(false)
 
 var [response, setResponse] = useState({})
 
 useEffect(()=>{
- if(!loaded){
+          if(!loaded){
 window.server_call("http://localhost:8081",
                    props.path,
                    {},
@@ -63,13 +91,13 @@ window.server_call("http://localhost:8081",
                    })
 setLoaded(true)
 }
-})
+          })
 
 return response ? <ObjectExplorer object={response} onApiCall={setResponse} domainSpecific={props.domainSpecific}></ObjectExplorer> : "waiting on response..."
 }
 
 function ObjectExplorer (props){
-  var displayResponse = (r)=>{
+var displayResponse = (r)=>{
   if(r.type){
     if(r.type == "function"){
       return <FunctionViewer wrapper={r} onCall={props.onApiCall}>domainSpecific{props.domainSpecific}</FunctionViewer>
@@ -78,7 +106,6 @@ function ObjectExplorer (props){
       return "Arg"
     }
     let DS = props.domainSpecific
-    console.log(DS)
     if(DS) return <DS wrapper={r} />
   }
 
@@ -107,7 +134,7 @@ return displayResponse(props.object)
 }
 
 function FunctionViewer (props){
-  var [result, setResult] = useState()
+var [result, setResult] = useState()
 
 var [outgoingArgs, setOutgoingArgs] = useState({})
 
@@ -147,7 +174,6 @@ props.wrapper.arguments ?
      Object.keys(props.wrapper.arguments).map((arg)=>
      <Mui.TableRow><Mui.TableCell><Mui.Chip label={arg}></Mui.Chip></Mui.TableCell><Mui.TableCell>{editorForType(props.wrapper.arguments[arg], 
                  (s)=>{ 
-                 console.log(s) 
                  var newArgs = {...outgoingArgs} 
                  newArgs[arg] = s 
                  setOutgoingArgs(newArgs); 
@@ -160,19 +186,19 @@ props.wrapper.arguments ?
 }
 
 function BasicBooleanEditor (props){
-  var [checked, setChecked] = useState(props.value)
+var [checked, setChecked] = useState(props.value)
 
 return <Mui.Switch checked={checked} onChange={(e)=>{setChecked(!checked);props.onChange(!checked)}}></Mui.Switch>
 }
 
 function BasicStringEditor (props){
-  var [value, setValue] = useState(props.value)
+var [value, setValue] = useState(props.value)
 
 return <Mui.TextField onChange={(e) => {setValue(e.target.value); props.onChange(e.target.value)}} label={props.label} value={value} variant="outlined"></Mui.TextField>
 }
 
 function CodeEditor (props){
-  var [value, setValue] = useState(props.script.script)
+var [value, setValue] = useState(props.script.script)
 
 return <div>
 
