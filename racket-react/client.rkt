@@ -282,6 +282,13 @@
 	    (provide (rename-out [Mui.Switch Switch]))
 	    (define-foreign-component Mui.Switch)
 
+	    (provide (rename-out [Mui.Tooltip Tooltip]))
+	    (define-foreign-component Mui.Tooltip)
+
+
+
+
+
 	    (provide (rename-out [I.Code CodeIcon]))
 	    (define-foreign-component I.Code)
 
